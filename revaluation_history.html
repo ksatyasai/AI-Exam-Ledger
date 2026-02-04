@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revaluation History - ExamChain</title>
+    <link rel="stylesheet" href="./css/global.css">
+</head>
+
+<body>
+    <header class="top-nav">
+        <div class="logo-container">
+            <h2 style="font-weight: 800;">Exam<span style="color: var(--primary)">Chain</span></h2>
+        </div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="student_dashboard.html">Dashboard</a>
+            <a href="#" class="active">History</a>
+        </nav>
+        <div class="auth-buttons">
+            <a href="login.html" class="btn btn-secondary">Login</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Revaluation History</h1>
+            <p class="page-subtitle">Track your past revaluation requests and payments</p>
+        </div>
+
+        <div class="card" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <th style="padding: 1rem;">Request ID</th>
+                        <th style="padding: 1rem;">Subject</th>
+                        <th style="padding: 1rem;">Date</th>
+                        <th style="padding: 1rem;">Fee Status</th>
+                        <th style="padding: 1rem;">Exam Status</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <!-- JS population -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const historyData = [
+            { id: "REV-2024-001", subject: "Network Security", date: "2024-10-20", fee: "Paid", status: "Completed" },
+            { id: "REV-2024-002", subject: "Machine Learning", date: "2024-11-05", fee: "Pending", status: "Draft" },
+            { id: "REV-2024-003", subject: "Compiler Design", date: "2024-11-12", fee: "Paid", status: "Processing" }
+        ];
+
+        const tbody = document.getElementById('historyBody');
+
+        historyData.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+
+            let statusColor = '#94a3b8';
+            if (row.status === 'Completed') statusColor = 'var(--success)';
+            if (row.status === 'Processing') statusColor = '#fbbf24';
+
+            tr.innerHTML = `
+                <td style="padding: 1rem; color: var(--text-muted);">${row.id}</td>
+                <td style="padding: 1rem; font-weight: 500;">${row.subject}</td>
+                <td style="padding: 1rem;">${row.date}</td>
+                <td style="padding: 1rem;"><span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">${row.fee}</span></td>
+                <td style="padding: 1rem; color: ${statusColor};">${row.status}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    </script>
+</body>
+
+</html>

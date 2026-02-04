@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - ExamChain</title>
+    <link rel="stylesheet" href="./css/global.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media(max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .data-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: bold;
+        }
+
+        .scrollalbe-table {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .notification-form textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-nav">
+        <div class="logo-container">
+            <h2 style="font-weight: 800;">Exam<span style="color: var(--primary)">Chain</span> Admin</h2>
+        </div>
+        <nav class="nav-links">
+            <a href="#" class="active">Dashboard</a>
+            <a href="admin_check_marks.html">Check Marks</a>
+            <a href="admin_payments.html">Payment History</a>
+        </nav>
+        <div class="auth-buttons">
+            <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Administration Portal</h1>
+            <p class="page-subtitle">Manage users, approvals, and institute updates</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Left Column: Main Data -->
+            <div class="card">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('reval')">Approvals</div>
+                    <div class="tab" onclick="switchTab('student')">Students</div>
+                    <div class="tab" onclick="switchTab('faculty')">Faculty</div>
+                </div>
+
+                <div class="scrollalbe-table">
+                    <table class="data-table">
+                        <thead id="tableHead">
+                            <!-- JS Populates -->
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="5">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right Column: Notifications -->
+            <div class="card">
+                <h3>📢 Release Notification</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Send alerts to students
+                    and faculty.</p>
+
+                <div class="notification-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">Title</label>
+                        <input type="text" id="notifTitle" class="form-input" placeholder="e.g. Exam Schedule Released">
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">Audience</label>
+                        <select id="notifAudience" class="form-input" style="background: rgba(0,0,0,0.3);">
+                            <option value="all">Everyone</option>
+                            <option value="student">Students Only</option>
+                            <option value="faculty">Faculty Only</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">Message Content</label>
+                        <textarea id="notifMessage" class="form-input"
+                            placeholder="Type your announcement here..."></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="sendNotification()">Publish Notification</button>
+                    <p id="notifStatus" style="font-size: 0.9rem; margin-top: 0.5rem;"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit User Modal -->
+    <div class="details-modal" id="editUserModal"
+        style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:200; justify-content:center; align-items:center;">
+        <div class="modal-content"
+            style="background:var(--surface); padding:2rem; border-radius:12px; width:90%; max-width:500px; border:1px solid rgba(255,255,255,0.1);">
+            <h3 style="margin-bottom:1rem;">Edit User Details</h3>
+            <input type="hidden" id="editUserId">
+            <div style="margin-bottom:1rem;">
+                <label>Name</label>
+                <input type="text" id="editName" class="form-input">
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label>Email</label>
+                <input type="text" id="editEmail" class="form-input">
+            </div>
+            <div style="margin-bottom:1rem;">
+                <label>Department</label>
+                <input type="text" id="editDept" class="form-input">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:1rem;">
+                <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveUserChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check Admin
+        (function () {
+            const role = localStorage.getItem('userRole');
+            if (role !== 'admin') {
+                window.location.href = 'login.html';
+            }
+        })();
+
+        let currentTab = 'reval';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('reval');
+        });
+
+        async function switchTab(type) {
+            currentTab = type;
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => t.classList.remove('active'));
+
+            if (type === 'reval') tabs[0].classList.add('active');
+            else if (type === 'student') tabs[1].classList.add('active');
+            else tabs[2].classList.add('active');
+
+            if (type === 'reval') {
+                loadRevals();
+            } else {
+                loadUsers(type);
+            }
+        }
+
+        async function loadRevals() {
+            setHeaders(['Student ID', 'Subject', 'Current Marks', 'AI Suggested', 'Action']);
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="5">Checking pending requests...</td></tr>';
+            try {
+                const res = await fetch('http://localhost:5000/api/admin/reval-requests');
+                const data = await res.json();
+                if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="5">No pending approvals.</td></tr>'; return; }
+                tbody.innerHTML = data.map(r => `
+                    <tr>
+                        <td>${r.studentId}</td>
+                        <td>${r.subjectCode}</td>
+                        <td>${r.marks}</td>
+                        <td style="color:var(--success); font-weight:bold;">${r.aiMarks}</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="processReval('${r._id}', 'approve')">Approve</button>
+                            <button class="btn btn-danger" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="processReval('${r._id}', 'reject')">Reject</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="color:red;">Error.</td></tr>'; }
+        }
+
+        async function processReval(id, action) {
+            if (!confirm(`Are you sure you want to ${action} this result?`)) return;
+
+            try {
+                const res = await fetch('http://localhost:5000/api/admin/approve-reval', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resultId: id, action })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Processed successfully');
+                    loadRevals();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Network Error');
+            }
+        }
+
+        async function loadUsers(role) {
+            setHeaders(['ID', 'Name', 'Dept', 'Email', 'Action']);
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="5">Loading data...</td></tr>';
+            try {
+                const response = await fetch(`http://localhost:5000/api/admin/users?role=${role}`);
+                const users = await response.json();
+                if (users.length === 0) { tbody.innerHTML = '<tr><td colspan="5">No users found.</td></tr>'; return; }
+                tbody.innerHTML = users.map(u => `
+                    <tr>
+                        <td style="font-family: monospace; color: var(--primary);">${u.userId}</td>
+                        <td style="font-weight: 500;">${u.name}</td>
+                        <td>${u.department || '-'}</td>
+                        <td style="color: var(--text-muted);">${u.email || '-'}</td>
+                        <td>
+                            <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.8rem;" 
+                                onclick="openEditModal('${u.userId}', '${u.name}', '${u.email || ''}', '${u.department || ''}')">Edit</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="color: red;">Failed.</td></tr>'; }
+        }
+
+        function setHeaders(headers) {
+            document.getElementById('tableHead').innerHTML = `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+        }
+
+        // Edit Modal Logic
+        function openEditModal(id, name, email, dept) {
+            document.getElementById('editUserId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editDept').value = dept;
+            document.getElementById('editUserModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        async function saveUserChanges() {
+            const id = document.getElementById('editUserId').value;
+            const name = document.getElementById('editName').value;
+            const email = document.getElementById('editEmail').value;
+            const dept = document.getElementById('editDept').value;
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, department: dept })
+                });
+                const data = await res.json();
+                if (data.success) { alert('User details updated!'); closeEditModal(); if (currentTab !== 'student' && currentTab !== 'faculty') loadUsers('student'); else loadUsers(currentTab); }
+                else { alert('Update failed: ' + data.message); }
+            } catch (e) { console.error(e); alert('Network Error'); }
+        }
+
+        async function sendNotification() {
+            const title = document.getElementById('notifTitle').value;
+            const message = document.getElementById('notifMessage').value;
+            const audience = document.getElementById('notifAudience').value;
+            const status = document.getElementById('notifStatus');
+
+            if (!title || !message) {
+                status.innerHTML = '<span style="color: red;">Please fill all fields.</span>';
+                return;
+            }
+
+            status.innerHTML = '<span style="color: yellow;">Sending...</span>';
+
+            try {
+                const res = await fetch('http://localhost:5000/api/admin/notifications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, message, audience })
+                });
+
+                const data = await res.json();
+                if (data.success) { status.innerHTML = '<span style="color: var(--success);">Notification Released!</span>'; document.getElementById('notifTitle').value = ''; document.getElementById('notifMessage').value = ''; }
+                else { status.innerHTML = `<span style="color: red;">Error: ${data.message}</span>`; }
+            } catch (e) {
+                console.error(e);
+                status.innerHTML = '<span style="color: red;">Network Error</span>';
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

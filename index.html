@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blockchain Exam System</title>
+  <link rel="stylesheet" href="./css/global.css">
+  <style>
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      text-align: center;
+      background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.1), transparent 40%),
+        radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.1), transparent 40%);
+    }
+
+    .hero-content {
+      max-width: 800px;
+      padding: 2rem;
+    }
+
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      margin-bottom: 3rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 2rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: transform 0.3s;
+    }
+
+    .feature-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-5px);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: inline-block;
+      padding: 10px;
+      background: rgba(79, 70, 229, 0.1);
+      border-radius: 12px;
+      color: var(--primary);
+    }
+  </style>
+</head>
+
+<body>
+  <header class="top-nav">
+    <div class="logo-container">
+      <h2 style="font-weight: 800; letter-spacing: -0.5px;">Exam<span style="color: var(--primary)">Chain</span></h2>
+    </div>
+    <nav class="nav-links">
+      <a href="index.html" class="active">Home</a>
+
+      <!-- Dynamic Links managed by JS -->
+      <a href="results.html" id="navResults">Check Results</a>
+      <a href="login.html?role=student" id="navStudent">Student Login</a>
+      <a href="login.html?role=faculty" id="navFaculty">Faculty Login</a>
+
+      <a href="student_dashboard.html" id="navStudentDash" style="display: none;">Dashboard</a>
+      <a href="faculty_dashboard.html" id="navFacultyDash" style="display: none;">Dashboard</a>
+    </nav>
+    <div class="auth-buttons">
+      <button class="btn btn-secondary" id="authBtn" onclick="handleAuthClick()">Login</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <span
+          style="color: var(--accent); font-weight: 600; letter-spacing: 1px; font-size: 0.9rem; display: block; margin-bottom: 1rem;">NEXT
+          GEN EVALUATION</span>
+        <h1 class="hero-title">Blockchain-Based Exam Record & AI Revaluation</h1>
+        <p class="hero-desc">Experience transparent, tamper-proof exam records secured by blockchain technology and
+          instant, unbiased AI-assisted revaluation.</p>
+
+        <div class="cta-group" id="ctaGroup">
+          <!-- Default View -->
+          <a href="results.html" class="btn btn-primary" id="ctaPrimary">Check Results</a>
+          <a href="login.html?role=faculty" class="btn btn-secondary" id="ctaSecondary">Faculty Portal</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Secure Records</h3>
+        <p style="color: var(--text-muted); margin-top: 0.5rem;">Exam results are hashed and stored on a blockchain
+          ledger, ensuring immutability and trust.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>AI Revaluation</h3>
+        <p style="color: var(--text-muted); margin-top: 0.5rem;">Advanced OCR and NLP models analyze answer sheets to
+          provide instant, accurate marking suggestions.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Instant Results</h3>
+        <p style="color: var(--text-muted); margin-top: 0.5rem;">No more waiting for months. Get revaluation results in
+          minutes with detailed feedback.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 ExamChain Project. Final Year Academic Project.</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const role = localStorage.getItem('userRole');
+      const
+        navResults = document.getElementById('navResults'),
+        navStudent = document.getElementById('navStudent'),
+        navFaculty = document.getElementById('navFaculty'),
+        navStudentDash = document.getElementById('navStudentDash'),
+        navFacultyDash = document.getElementById('navFacultyDash'),
+        authBtn = document.getElementById('authBtn'),
+        ctaPrimary = document.getElementById('ctaPrimary'),
+        ctaSecondary = document.getElementById('ctaSecondary');
+
+      if (role === 'student') {
+        // SHOW STUDENT, HIDE FACULTY
+        navFaculty.style.display = 'none';
+        navFacultyDash.style.display = 'none';
+
+        navStudent.style.display = 'none'; // Already logged in
+        navStudentDash.style.display = 'inline-block';
+
+        authBtn.innerText = 'Logout';
+
+        // Adjust CTA
+        ctaPrimary.href = 'student_dashboard.html';
+        ctaPrimary.innerText = 'Go to Dashboard';
+        ctaSecondary.style.display = 'none';
+
+      } else if (role === 'faculty') {
+        // SHOW FACULTY, HIDE STUDENT
+        navStudent.style.display = 'none';
+        navStudentDash.style.display = 'none';
+        navResults.style.display = 'none'; // Faculty don't check results here essentially
+
+        navFaculty.style.display = 'none'; // Already logged in
+        navFacultyDash.style.display = 'inline-block';
+
+        authBtn.innerText = 'Logout';
+
+        // Adjust CTA
+        ctaPrimary.href = 'faculty_dashboard.html';
+        ctaPrimary.innerText = 'Go to Dashboard';
+        ctaSecondary.style.display = 'none';
+      }
+    });
+
+    function handleAuthClick() {
+      const role = localStorage.getItem('userRole');
+      if (role) {
+        localStorage.clear();
+        window.location.reload();
+      } else {
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+</body>
+
+</html>

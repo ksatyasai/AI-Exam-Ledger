@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment History - JNTUK</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./css/payment-history.css"/>
+  <script src="./js/payment-history.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <img src="./assets/logo.svg" alt="JNTUK Logo" class="logo">
+    </div>
+
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="results.html">Result ▾</a>
+      <a href="payment-history.html" class="active">Payment History ▾</a>
+    </nav>
+
+    <div id="authActions">
+      <button class="login-btn" id="loginBtn">Login</button>
+      <button class="login-btn" id="logoutBtn"
+              style="display:none; margin-left:10px; background-color:#d9534f;">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="page-wrapper">
+    <h1 class="page-title">Payment History</h1>
+
+    <!-- For now: no records -->
+    <section class="empty-state">
+      <h2>No payment history found</h2>
+      <p>Your past fee payments will appear here once you complete transactions.</p>
+    </section>
+  </main>
+</body>
+</html>

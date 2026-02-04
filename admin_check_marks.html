@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Marks - ExamChain Admin</title>
+    <link rel="stylesheet" href="./css/global.css">
+    <style>
+        .admin-controls {
+            display: flex;
+            margin-bottom: 2rem;
+            gap: 1rem;
+            align-items: center;
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .data-table th {
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .grade-pass {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .grade-fail {
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-nav">
+        <div class="logo-container">
+            <h2 style="font-weight: 800;">Exam<span style="color: var(--primary)">Chain</span> Admin</h2>
+        </div>
+        <nav class="nav-links">
+            <a href="admin_dashboard.html">Dashboard</a>
+            <a href="#" class="active">Check Marks</a>
+            <a href="admin_payments.html">Payment History</a>
+        </nav>
+        <div class="auth-buttons">
+            <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Student Marks Repository</h1>
+            <p class="page-subtitle">View and search across all student results.</p>
+        </div>
+
+        <div class="admin-controls">
+            <input type="text" id="filterId" placeholder="Filter by Student ID" class="form-input"
+                style="max-width: 250px;" onkeyup="loadMarks()">
+            <input type="text" id="filterSubject" placeholder="Filter by Subject Code" class="form-input"
+                style="max-width: 250px;" onkeyup="loadMarks()">
+            <div style="flex-grow: 1;"></div>
+            <button class="btn btn-primary" onclick="loadMarks()">Refresh</button>
+        </div>
+
+        <div class="card" style="padding: 0;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Subject</th>
+                        <th>Subject Code</th>
+                        <th>Marks</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="6">Loading marks...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Check Admin
+        (function () {
+            const role = localStorage.getItem('userRole');
+            if (role !== 'admin') {
+                window.location.href = 'login.html';
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMarks();
+        });
+
+        async function loadMarks() {
+            const tbody = document.getElementById('tableBody');
+            const sid = document.getElementById('filterId').value;
+            const sub = document.getElementById('filterSubject').value;
+
+            // Debounce could be added here for optimization
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/admin/results?studentId=${sid}&subject=${sub}`);
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6">No results found matching criteria.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(r => `
+                    <tr>
+                        <td style="font-family: monospace; color: var(--primary);">${r.studentId}</td>
+                        <td>${r.subjectName}</td>
+                        <td>${r.subjectCode}</td>
+                        <td style="font-weight: bold;">${r.marks}</td>
+                        <td>${r.grade}</td>
+                        <td><span class="${r.status === 'PASS' ? 'grade-pass' : 'grade-fail'}">${r.status}</span></td>
+                    </tr>
+                `).join('');
+
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = '<tr><td colspan="6" style="color:red;">Failed to load data.</td></tr>';
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

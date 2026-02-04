@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard - ExamChain</title>
+    <link rel="stylesheet" href="./css/global.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-nav">
+        <div class="logo-container">
+            <h2 style="font-weight: 800;">Exam<span style="color: var(--primary)">Chain</span> Faculty</h2>
+        </div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="#" class="active">Dashboard</a>
+            <!-- <a href="student_dashboard.html">View Student View</a> Removed for separation -->
+        </nav>
+        <div class="auth-buttons">
+            <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Faculty Dashboard</h1>
+            <p class="page-subtitle">Upload results and manage student records</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Combined Post Result & Upload Section -->
+            <div class="card">
+                <h3>Post Student Result</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Enter result details. If status is FAIL,
+                    please upload the answer script PDF for AI revaluation.</p>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- Student & Subject Info -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <input type="text" id="resStudentId" placeholder="Student ID (e.g. 19A81A0501)"
+                            class="form-input"
+                            style="padding: 10px; border-radius: 6px; border: 1px solid #444; background: rgba(0,0,0,0.2); color: white;">
+                        <input type="text" id="resSubject" placeholder="Subject Name" class="form-input"
+                            style="padding: 10px; border-radius: 6px; border: 1px solid #444; background: rgba(0,0,0,0.2); color: white;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <input type="text" id="resCode" placeholder="Subject Code (e.g. CS402)" class="form-input"
+                            style="padding: 10px; border-radius: 6px; border: 1px solid #444; background: rgba(0,0,0,0.2); color: white;">
+                        <input type="number" id="resMarks" placeholder="Marks" class="form-input"
+                            style="padding: 10px; border-radius: 6px; border: 1px solid #444; background: rgba(0,0,0,0.2); color: white;">
+                    </div>
+
+                    <!-- Grade & Status -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <input type="text" id="resGrade" placeholder="Grade (A, B, F)" class="form-input"
+                            style="padding: 10px; border-radius: 6px; border: 1px solid #444; background: rgba(0,0,0,0.2); color: white;">
+                        <select id="resStatus" onchange="toggleUploadField()"
+                            style="padding: 10px; border-radius: 6px; border: 1px solid #444; background: rgba(0,0,0,0.2); color: white;">
+                            <option value="PASS">PASS</option>
+                            <option value="FAIL">FAIL</option>
+                        </select>
+                    </div>
+
+                    <!-- PDF Upload (Initially hidden or shown based on status, let's keep it visible but emphasize for FAIL) -->
+                    <div id="pdfUploadContainer"
+                        style="padding: 1rem; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,0,0,0.05); display: none;">
+                        <p style="margin-bottom: 0.5rem; font-size: 0.9rem; color: #fca5a5;">⚠️ Student Failed. Please
+                            upload the answer script PDF.</p>
+                        <input type="file" id="resPdf" accept="application/pdf" class="form-input"
+                            style="color: white;">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="postResult()">Publish Result</button>
+                    <p id="msgResult" style="font-size: 0.9rem; margin-top: 0.5rem;"></p>
+                </div>
+            </div>
+
+            <!-- Verify Student Section -->
+            <div class="card">
+                <h3>Verify Student Record</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">Check results for a specific student ID.</p>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <input type="text" id="searchStudentId" placeholder="Enter Student ID" class="form-input"
+                        style="flex: 1; padding: 0.8rem; border-radius: 6px; border: 1px solid #444; background: rgba(0,0,0,0.2); color: white;">
+                    <button class="btn btn-secondary" onclick="verifyStudent()">Search</button>
+                </div>
+                <div id="verifyResultArea" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Strict Role Check - Run immediately
+        (function () {
+            const role = localStorage.getItem('userRole');
+            if (role !== 'faculty') {
+                window.location.href = 'login.html';
+            }
+        })();
+
+        async function verifyStudent() {
+            const sid = document.getElementById('searchStudentId').value;
+            const resultArea = document.getElementById('verifyResultArea');
+
+            if (!sid) return;
+
+            resultArea.innerHTML = '<p>Searching...</p>';
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/student/results/${sid}`);
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    resultArea.innerHTML = '<p style="color: yellow">No results found for this Student ID.</p>';
+                    return;
+                }
+
+                let html = '<table style="width:100%; border-collapse: collapse; font-size: 0.9rem;">';
+                html += '<thead><tr style="border-bottom: 1px solid #444; color: var(--text-muted);"><th>Subject</th><th>Grade</th><th>Status</th></tr></thead><tbody>';
+
+                data.forEach(r => {
+                    const color = r.status === 'PASS' ? 'var(--success)' : '#ef4444';
+                    html += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 0.5rem 0;">${r.subjectName}</td>
+                            <td>${r.grade}</td>
+                            <td style="color:${color}">${r.status}</td>
+                        </tr>
+                    `;
+                });
+                html += '</tbody></table>';
+                resultArea.innerHTML = html;
+
+            } catch (e) {
+                console.error(e);
+                resultArea.innerHTML = '<p style="color: red">Error fetching data.</p>';
+            }
+        }
+
+        function toggleUploadField() {
+            const status = document.getElementById('resStatus').value;
+            const container = document.getElementById('pdfUploadContainer');
+            if (status === 'FAIL') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        async function postResult() {
+            const sid = document.getElementById('resStudentId').value;
+            const sub = document.getElementById('resSubject').value;
+            const code = document.getElementById('resCode').value;
+            const grade = document.getElementById('resGrade').value;
+            const marks = document.getElementById('resMarks').value;
+            const status = document.getElementById('resStatus').value;
+            const fileInput = document.getElementById('resPdf');
+            const msg = document.getElementById('msgResult');
+
+            if (!sid || !sub || !code || !grade || !marks) {
+                msg.innerText = "Please fill all fields.";
+                msg.style.color = "red";
+                return;
+            }
+
+            // Check if FAIL and file is missing (optional enforcement)
+            // if (status === 'FAIL' && fileInput.files.length === 0) {
+            //     msg.innerText = "Please upload answer script for failed subject.";
+            //     msg.style.color = "red";
+            //     return;
+            // }
+
+            msg.innerText = "Publishing...";
+
+            const formData = new FormData();
+            formData.append('studentId', sid);
+            formData.append('subjectName', sub);
+            formData.append('subjectCode', code);
+            formData.append('grade', grade);
+            formData.append('marks', marks);
+            formData.append('status', status);
+            formData.append('semester', 4); // Hardcoded
+
+            if (fileInput.files.length > 0) {
+                formData.append('pdfFile', fileInput.files[0]);
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/faculty/results', {
+                    method: 'POST',
+                    body: formData // No Content-Type header needed, browser sets it for multipart
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    msg.innerText = "Result Published Successfully!";
+                    msg.style.color = "var(--success)";
+                    // Clear form
+                    document.getElementById('resSubject').value = '';
+                    document.getElementById('resCode').value = '';
+                    document.getElementById('resMarks').value = '';
+                    document.getElementById('resPdf').value = '';
+                    fileInput.value = '';
+                } else {
+                    msg.innerText = data.message || "Failed to publish";
+                    msg.style.color = "red";
+                }
+            } catch (e) {
+                console.error(e);
+                msg.innerText = "Network Error";
+                msg.style.color = "red";
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

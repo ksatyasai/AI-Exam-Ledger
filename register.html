@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Register - ExamChain</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/login.css">
+    <style>
+        .role-switch {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 1rem;
+        }
+
+        .role-btn {
+            padding: 8px 16px;
+            border: 1px solid #ccc;
+            background: #f0f0f0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .role-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="portal-wrapper">
+        <div class="top-bar"></div>
+
+        <div class="header">
+            <h1>Register - ExamChain</h1>
+            <h2>Create your Account</h2>
+        </div>
+
+        <div class="login-card">
+            <div class="role-switch">
+                <button class="role-btn active" id="btnStudent" onclick="setRole('student')">Student</button>
+                <button class="role-btn" id="btnFaculty" onclick="setRole('faculty')">Faculty</button>
+            </div>
+
+            <input type="text" id="userId" placeholder="Student ID (e.g. 19A81A...)" />
+            <input type="text" id="userName" placeholder="Full Name" />
+            <input type="text" id="dept" placeholder="Department (e.g. CSE)" />
+            <input type="password" id="password" placeholder="Create Password" />
+
+            <button onclick="register()">REGISTER</button>
+
+            <div class="links">
+                <a href="login.html"><b>Already have an account? Login</b></a>
+            </div>
+        </div>
+
+        <div class="footer-text"><b>
+                © 2026 ExamChain Project. All rights reserved.</b>
+        </div>
+    </div>
+
+    <script>
+        let currentRole = 'student';
+
+        function setRole(role) {
+            currentRole = role;
+            document.getElementById('btnStudent').className = role === 'student' ? 'role-btn active' : 'role-btn';
+            document.getElementById('btnFaculty').className = role === 'faculty' ? 'role-btn active' : 'role-btn';
+
+            document.getElementById('userId').placeholder = role === 'student' ? 'Student ID (e.g. 19A81A...)' : 'Faculty ID';
+        }
+
+        async function register() {
+            const id = document.getElementById('userId').value.trim();
+            const name = document.getElementById('userName').value.trim();
+            const dept = document.getElementById('dept').value.trim();
+            const pwd = document.getElementById('password').value.trim();
+            const btn = document.querySelector('button[onclick="register()"]');
+
+            if (!id || !name || !pwd || !dept) {
+                alert('Please fill all fields.');
+                return;
+            }
+
+            btn.innerText = 'Creating Account...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: id,
+                        password: pwd,
+                        role: currentRole,
+                        name: name,
+                        department: dept
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Registration Successful! Please Login.');
+                    window.location.href = 'login.html';
+                } else {
+                    alert(data.message || 'Registration failed');
+                    btn.innerText = 'REGISTER';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Failed to connect to server');
+                btn.innerText = 'REGISTER';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,201 @@
+/* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #222;
+    }
+
+    /* Top nav (same pattern as other pages) */
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background-color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 60px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      z-index: 1000;
+    }
+    .logo {
+      height: 46px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      font-size: 16px;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: #333333;
+      padding-bottom: 4px;
+    }
+    .nav-links a.active {
+      border-bottom: 3px solid #1aa05d;
+      color: #1aa05d;
+    }
+    .login-btn {
+      background-color: #138f42;
+      color: #ffffff;
+      border: none;
+      padding: 10px 26px;
+      border-radius: 4px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    /* Page layout */
+    .page-wrapper {
+      margin-top: 90px;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .card {
+      width: 100%;
+      max-width: 900px;
+      background: linear-gradient(180deg, #f6fbff 0%, #ffffff 35%, #ffffff 100%);
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      padding: 30px 25px 35px;
+      text-align: center;
+    }
+
+    /* Header banner */
+    .results-header {
+      background: linear-gradient(90deg, #3b7cff, #005edc);
+      color: #fff;
+      border-radius: 14px;
+      padding: 18px 25px;
+      font-weight: bold;
+      font-size: 22px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    .results-header span.year {
+      display: block;
+      font-size: 16px;
+      font-weight: normal;
+      margin-top: 4px;
+    }
+
+    /* Green banner */
+    .status-banner {
+      margin: 18px auto 26px;
+      max-width: 420px;
+      background-color: #10b56b;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* Results table */
+    .results-table-wrapper {
+      margin: 0 auto 28px;
+      max-width: 750px;
+      overflow-x: auto;
+    }
+    table.results-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    .results-table thead {
+      background-color: #f0f3f7;
+    }
+    .results-table th,
+    .results-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid #e3e6ee;
+    }
+    .results-table th {
+      font-weight: 600;
+      color: #555;
+    }
+    .results-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .name-highlight {
+      border: 2px solid #e53935;
+      padding: 4px 10px;
+      border-radius: 4px;
+      display: inline-block;
+      color: #e53935;
+      font-weight: 600;
+      background-color: #fff5f5;
+    }
+    .status-failed {
+      color: #e53935;
+      font-weight: 600;
+    }
+    .status-pass {
+      color: #2e7d32;
+      font-weight: 600;
+    }
+
+    /* Recount / re-eval section */
+    .re-section-title {
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #c62828;
+      text-transform: uppercase;
+    }
+    .re-buttons {
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .primary-btn {
+      padding: 10px 22px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      background-color: #1f6bff;
+    }
+    .primary-btn:hover {
+      background-color: #1754c4;
+    }
+    .link-text {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #555;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .top-nav {
+        padding: 0 16px;
+      }
+      .page-wrapper {
+        padding: 90px 10px 20px;
+      }
+      .card {
+        padding: 20px 16px 26px;
+      }
+      .results-header {
+        font-size: 18px;
+      }
+    }

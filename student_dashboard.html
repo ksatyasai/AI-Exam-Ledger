@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - ExamChain</title>
+    <link rel="stylesheet" href="./css/global.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .results-table th {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .grade-pass {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .grade-fail {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid var(--primary);
+        }
+
+        .notification-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-nav">
+        <div class="logo-container">
+            <h2 style="font-weight: 800;">Exam<span style="color: var(--primary)">Chain</span> Student</h2>
+        </div>
+        <a href="index.html">Home</a>
+        <a href="student_dashboard.html" class="active">Dashboard</a>
+        <!-- Link removed for separation relevance -->
+        </nav>
+        <div class="auth-buttons" id="authSection">
+            <!-- JS will populate checking user state -->
+            <a href="login.html" class="btn btn-secondary">Login</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Student Portal</h1>
+            <p class="page-subtitle">View results, notifications, and manage revaluations.</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Results Section -->
+            <div class="card" style="grid-column: span 2;">
+                <h3>Recent Results</h3>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Code</th>
+                            <th>Grade</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cryptography</td>
+                            <td>CS401</td>
+                            <td>A</td>
+                            <td class="grade-pass">PASS</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>Distributed Systems</td>
+                            <td>CS402</td>
+                            <td>F</td>
+                            <td class="grade-fail">FAIL</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"
+                                    onclick="handleReval('CS402')">Revaluation</button>
+                                <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;"
+                                    onclick="handleRecount('CS402')">Recounting</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Data Mining</td>
+                            <td>CS403</td>
+                            <td>B+</td>
+                            <td class="grade-pass">PASS</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Notifications Section -->
+            <div class="card">
+                <h3>Notifications</h3>
+                <div class="notification-item">
+                    <span class="notification-date">Jan 28, 2026</span>
+                    <strong>Exam Results Released</strong>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.2rem;">Semester 4 results are
+                        now available.</p>
+                </div>
+                <div class="notification-item">
+                    <span class="notification-date">Jan 25, 2026</span>
+                    <strong>Fee Payment Alert</strong>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.2rem;">Last date for semester
+                        fee is Feb 10th.</p>
+                </div>
+                <div class="notification-item">
+                    <span class="notification-date">Jan 20, 2026</span>
+                    <strong>New Electives</strong>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.2rem;">Registration open for
+                        new electives.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const role = localStorage.getItem('userRole');
+            const userId = localStorage.getItem('userId');
+            const authSection = document.getElementById('authSection');
+            const resultsCard = document.querySelector('.dashboard-grid .card:first-child');
+            const notificationCard = document.querySelector('.dashboard-grid .card:last-child');
+
+            // 1. Fetch & Show Notifications (Public)
+            try {
+                const notifRes = await fetch('http://localhost:5000/api/student/notifications');
+                const notifications = await notifRes.json();
+
+                let notifHtml = '<h3>Notifications</h3>';
+                if (notifications.length === 0) notifHtml += '<p style="color:var(--text-muted)">No new notifications</p>';
+
+                notifications.forEach(n => {
+                    notifHtml += `
+                        <div class="notification-item">
+                            <span class="notification-date">${new Date(n.date).toLocaleDateString()}</span>
+                            <strong>${n.title}</strong>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.2rem;">${n.message}</p>
+                        </div>
+                    `;
+                });
+                notificationCard.innerHTML = notifHtml;
+            } catch (e) {
+                console.error("Failed to fetch notifications", e);
+            }
+
+            // 2. Handle Login/Guest View actions
+            if (role === 'student' && userId) {
+                authSection.innerHTML = '<button class="btn btn-secondary" onclick="logout()">Logout</button>';
+
+                // Fetch Results
+                try {
+                    const resRes = await fetch(`http://localhost:5000/api/student/results/${userId}`);
+                    const results = await resRes.json();
+
+                    const tbody = document.querySelector('tbody');
+                    tbody.innerHTML = ''; // Clear hardcoded
+
+                    if (results.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5">No results found.</td></tr>';
+                    }
+
+                    results.forEach(r => {
+                        let actionHtml = '-';
+                        let statusHtml = r.status === 'PASS'
+                            ? `<td class="grade-pass">PASS</td>`
+                            : `<td class="grade-fail">FAIL</td>`;
+
+                        // Logic for Actions based on Revaluation Status
+                        if (r.revaluationStatus === 'pending_approval' || r.revaluationStatus === 'processing') {
+                            actionHtml = `
+                                <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; opacity: 0.7; cursor: not-allowed;" disabled>
+                                    Processing...
+                                </button>
+                            `;
+                        } else if (r.status === 'FAIL') {
+                            // Only show options if not already processed/pending
+                            if (r.revaluationStatus === 'none') {
+                                actionHtml = `
+                                    <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="handleReval('${r.subjectCode}')">Revaluation</button>
+                                    <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="handleRecount('${r.subjectCode}')">Recounting</button>
+                                `;
+                            } else if (r.revaluationStatus === 'completed') {
+                                actionHtml = `<span style="color: var(--text-muted); font-size: 0.8rem;">Reval Completed</span>`;
+                            }
+                        } else if (r.status === 'PASS' && r.revaluationStatus === 'completed') {
+                            actionHtml = `<span style="color: var(--success); font-size: 0.8rem;">Reval Completed</span>`;
+                        }
+
+                        const row = `
+                            <tr>
+                                <td>${r.subjectName}</td>
+                                <td>${r.subjectCode}</td>
+                                <td>${r.grade}</td>
+                                ${statusHtml}
+                                <td>${actionHtml}</td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    });
+
+                } catch (e) {
+                    console.error("Failed to fetch results", e);
+                }
+
+            } else {
+                // GUEST VIEW
+                authSection.innerHTML = '<a href="login.html" class="btn btn-secondary">Login</a>';
+
+                if (resultsCard) {
+                    resultsCard.innerHTML = `
+                        <h3>Recent Results</h3>
+                        <div style="padding: 3rem; text-align: center; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; margin-top: 1rem;">
+                            <p style="color: var(--text-muted); margin-bottom: 1rem;">Please log in to view your semester results and apply for revaluation.</p>
+                            <a href="login.html" class="btn btn-primary">Log In Now</a>
+                        </div>
+                    `;
+                }
+            }
+        });
+
+        function handleReval(subjectCode) {
+            if (!checkLogin()) return;
+            // Redirect to payment
+            window.location.href = `payment.html?type=revaluation&subject=${subjectCode}`;
+        }
+
+        function handleRecount(subjectCode) {
+            if (!checkLogin()) return;
+            // Redirect to payment
+            window.location.href = `payment.html?type=recounting&subject=${subjectCode}`;
+        }
+
+        function checkLogin() {
+            const role = localStorage.getItem('userRole');
+            if (!role) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // Global click interceptor for non-logged in users on interactive elements
+        document.addEventListener('click', (e) => {
+            const role = localStorage.getItem('userRole');
+            // If user is NOT logged in
+            if (!role) {
+                // If the target is a button or a link (that isn't login/home)
+                const target = e.target.closest('button, a');
+                if (target) {
+                    const href = target.getAttribute('href');
+                    const isAllowed = href === 'login.html' || href === 'index.html' || href === '#' || href === null;
+
+                    if (!isAllowed) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.location.href = 'login.html';
+                    }
+
+                    if (target.tagName === 'BUTTON' && !target.closest('.auth-buttons')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.location.href = 'login.html';
+                    }
+                }
+            }
+        }, true);
+    </script>
+</body>
+
+</html>

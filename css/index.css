@@ -1,0 +1,241 @@
+       /* ===== Reset ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+/* ===== Top Nav ===== */
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 60px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  z-index: 1000;
+}
+
+.logo {
+  height: 46px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+  font-size: 16px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #333333;
+  padding-bottom: 4px;
+}
+
+.nav-links a.active {
+  border-bottom: 3px solid #1aa05d;
+  color: #1aa05d;
+}
+
+.login-btn {
+  background-color: #138f42;
+  color: #ffffff;
+  border: none;
+  padding: 10px 26px;
+  border-radius: 4px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* ===== Hero ===== */
+.hero {
+  margin-top: 64px; /* space for fixed header */
+  height: 100vh;
+  background: url("../assets/jntukmainhomebg.png") ;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 70px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain; 
+}
+
+.hero-overlay {
+  max-width: 900px;
+}
+
+.welcome-text {
+  font-size: 22px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.hero-title {
+  font-size: 56px;
+  color: #4b2f2f;
+  margin-bottom: 8px;
+}
+
+.hero-subtitle {
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+/* ===== Cards ===== */
+.hero-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.card {
+  background-color: rgba(255,255,255,0.96);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+  padding: 18px 22px;
+  min-width: 260px;
+}
+
+.card h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.primary-chip {
+  background-color: #1aa05d;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.chip-label {
+  font-size: 13px;
+  color: #444;
+}
+
+.card-list {
+  list-style: none;
+  margin-top: 14px;
+}
+
+.card-list li {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.mt {
+  margin-top: 14px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .top-nav {
+    padding: 0 20px;
+  }
+  .hero {
+    padding: 100px 20px 40px;
+    height: auto;
+  }
+  .hero-title {
+    font-size: 38px;
+  }
+  .hero-cards {
+    flex-direction: column;
+  }
+}
+        /* ===== Footer Styles ===== */
+.site-footer {
+  background-color: #05080f;
+  color: #ffffff;
+  padding: 40px 60px 20px;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 60px;
+  justify-content: flex-start;
+  margin-bottom: 25px;
+}
+
+.footer-column {
+  min-width: 220px;
+}
+
+.footer-column h3 {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.footer-column p,
+.footer-column a {
+  font-size: 14px;
+  color: #d0d4e0;
+  text-decoration: none;
+  line-height: 1.7;
+  display: block;
+}
+
+.footer-column a:hover {
+  color: #ffffff;
+}
+
+.footer-social {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.footer-social a {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background-color: #111520;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.footer-social a:hover {
+  background-color: #1a73e8;
+}
+
+.footer-bottom {
+  border-top: 1px solid #202430;
+  padding-top: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: #b4b8c4;
+}
+
+@media (max-width: 768px) {
+  .site-footer {
+    padding: 30px 20px 15px;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    gap: 25px;
+  }
+}

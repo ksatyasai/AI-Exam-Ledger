@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment - ExamChain</title>
+    <link rel="stylesheet" href="./css/global.css">
+    <style>
+        .payment-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        .payment-card {
+            background: var(--surface);
+            padding: 3rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .amount-display {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 2rem 0;
+            color: var(--text);
+        }
+
+        .currency {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            vertical-align: super;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .method-btn {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .method-btn.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .success-checkmark {
+            font-size: 4rem;
+            color: var(--success);
+            display: none;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-nav">
+        <div class="logo-container">
+            <h2 style="font-weight: 800;">Exam<span style="color: var(--primary)">Chain</span></h2>
+        </div>
+    </header>
+
+    <main class="payment-container">
+        <div class="payment-card">
+            <div class="loader-overlay" id="loader">
+                <div class="success-checkmark" id="check">✓</div>
+                <p id="statusText">Processing Payment...</p>
+            </div>
+
+            <h2 style="margin-bottom: 0.5rem;">Revaluation Fee</h2>
+            <p style="color: var(--text-muted);">Secure Payment Gateway</p>
+
+            <div class="amount-display">
+                <span class="currency">₹</span>500
+            </div>
+
+            <div class="payment-methods">
+                <div class="method-btn active" onclick="selectMethod(this)">Credit Card</div>
+                <div class="method-btn" onclick="selectMethod(this)">UPI</div>
+                <div class="method-btn" onclick="selectMethod(this)">Net Banking</div>
+                <div class="method-btn" onclick="selectMethod(this)">Wallet</div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;"
+                onclick="processPayment()">
+                Pay Securely
+            </button>
+
+            <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                128-bit SSL Encrypted Transaction
+            </p>
+        </div>
+    </main>
+
+    <script>
+        function selectMethod(el) {
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        async function processPayment() {
+            const loader = document.getElementById('loader');
+            const status = document.getElementById('statusText');
+            const check = document.getElementById('check');
+
+            // Get params
+            const urlParams = new URLSearchParams(window.location.search);
+            const subject = urlParams.get('subject');
+            const type = urlParams.get('type');
+            const studentId = localStorage.getItem('userId');
+
+            loader.style.display = 'flex';
+            status.innerText = "Processing Payment...";
+
+            // Simulate Payment Gateway Delay first
+            await new Promise(r => setTimeout(r, 1500));
+
+            status.innerText = "Payment Verified. Starting AI Revaluation...";
+
+            try {
+                if (subject && studentId) {
+                    const response = await fetch('http://localhost:5000/api/student/reval', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ studentId, subjectCode: subject, type })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // Success
+                        status.innerText = "Request Submitted! Waiting for Admin Approval.";
+                        status.style.color = "var(--success)";
+                        status.style.fontWeight = "bold";
+                        check.style.display = 'block';
+
+                        // Clean up any local overrides so dashboard fetches fresh data
+                        localStorage.removeItem(`reval_${subject}`);
+
+                        setTimeout(() => {
+                            window.location.href = 'student_dashboard.html';
+                        }, 2500); // Slightly longer delay to read message
+                    } else {
+                        throw new Error(data.message || 'Revaluation failed');
+                    }
+                } else {
+                    throw new Error("Missing transaction details");
+                }
+
+            } catch (err) {
+                console.error(err);
+                status.innerText = err.message;
+                status.style.color = "red";
+                check.innerText = "❌";
+                check.style.display = 'block';
+                check.style.color = "red";
+
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    // Reset UI slightly if they want to try again or go back
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+
+</html>

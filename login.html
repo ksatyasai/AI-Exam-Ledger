@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - ExamChain</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/login.css">
+  <style>
+    /* Add some basic styles for the role switcher if not present */
+    .role-switch {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      gap: 1rem;
+    }
+
+    .role-btn {
+      padding: 8px 16px;
+      border: 1px solid #ccc;
+      background: #f0f0f0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .role-btn.active {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="portal-wrapper">
+    <div class="top-bar"></div>
+
+    <div class="header">
+      <!-- <img src="assets/jntuk_logo.png" class="logo"/> -->
+      <h1>ExamChain Portal</h1>
+      <h2>SECURE RESULTS & REVALUATION SYSTEM</h2>
+    </div>
+
+    <div class="login-card">
+      <div class="role-switch">
+        <button class="role-btn active" id="btnStudent" onclick="setRole('student')">Student</button>
+        <button class="role-btn" id="btnFaculty" onclick="setRole('faculty')">Faculty</button>
+        <button class="role-btn" id="btnAdmin" onclick="setRole('admin')">Admin</button>
+      </div>
+
+      <input type="text" id="userId" placeholder="Enter Student ID" />
+      <input type="password" id="password" placeholder="Enter Password" />
+      <button onclick="login()">LOG IN</button>
+
+      <div class="links">
+        <a href="register.html" style="display: block; margin-bottom: 0.5rem; color: #007bff;"><b>New User? Create
+            Account</b></a>
+        <a href="index.html"><b>Back to Home</b></a>
+      </div>
+    </div>
+
+    <div class="footer-text"><b>
+        © 2026 ExamChain Project. All rights reserved.</b>
+    </div>
+  </div>
+
+  <script>
+    let currentRole = 'student';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlRole = params.get('role');
+
+      if (urlRole === 'student' || urlRole === 'faculty' || urlRole === 'admin') {
+        // Strict Mode
+        setRole(urlRole);
+        document.querySelector('.role-switch').style.display = 'none';
+
+        // Update Header to be specific
+        const title = urlRole === 'student' ? 'Student Login' : (urlRole === 'faculty' ? 'Faculty Login' : 'Admin Login');
+        document.querySelector('h2').innerText = title.toUpperCase();
+      }
+    });
+
+    function setRole(role) {
+      currentRole = role;
+      document.getElementById('btnStudent').className = role === 'student' ? 'role-btn active' : 'role-btn';
+      document.getElementById('btnFaculty').className = role === 'faculty' ? 'role-btn active' : 'role-btn';
+      document.getElementById('btnAdmin').className = role === 'admin' ? 'role-btn active' : 'role-btn';
+
+      let placeholder = 'Enter ID';
+      if (role === 'student') placeholder = 'Enter Student ID';
+      else if (role === 'faculty') placeholder = 'Enter Faculty ID';
+      else placeholder = 'Enter Admin ID';
+
+      document.getElementById('userId').placeholder = placeholder;
+    }
+
+    async function login() {
+      const id = document.getElementById('userId').value.trim();
+      const pwd = document.getElementById('password').value.trim();
+      const btn = document.querySelector('button[onclick="login()"]');
+
+      if (!id || !pwd) {
+        alert('Please enter both ID and Password.');
+        return;
+      }
+
+      btn.innerText = 'Logging in...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: id, password: pwd, role: currentRole })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          localStorage.setItem('userRole', data.user.role);
+          localStorage.setItem('userId', data.user.userId);
+          localStorage.setItem('userName', data.user.name);
+
+          // Redirect
+          if (data.user.role === 'student') {
+            window.location.href = 'student_dashboard.html';
+          } else if (data.user.role === 'faculty') {
+            window.location.href = 'faculty_dashboard.html';
+          } else {
+            window.location.href = 'admin_dashboard.html';
+          }
+        } else {
+          alert(data.message || 'Login failed');
+          btn.innerText = 'LOG IN';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to connect to server');
+        btn.innerText = 'LOG IN';
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+
+</html>
