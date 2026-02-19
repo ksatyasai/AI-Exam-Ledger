@@ -197,8 +197,19 @@ else:
 # ---------- AI EVALUATION (ONE ROW PER QUESTION) ----------
 results = []
 
+# Default rubric template for questions not in rubric
+default_rule = {
+    'max_marks': 10,
+    'definition_marks': 3,
+    'keyword_marks': 4,
+    'explanation_marks': 3,
+    'keywords': []
+}
+
 for qid, answer_text in question_answers.items():
-    rule = rubric[qid]
+    # Get rule from rubric or use default if not found
+    rule = rubric.get(qid, default_rule)
+    
     score = 0
     breakdown = {}
 

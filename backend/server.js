@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -10,6 +11,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For parsing form data
+
+// Static file serving for uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/examchain';
@@ -26,11 +30,13 @@ const facultyRoutes = require('./routes/faculty');
 const adminRoutesBlockchain = require('./routes/adminRoutes');
 const questionPaperRoutes = require('./routes/questionPaperRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
+const chiefRoutes = require('./routes/chief'); // Chief examiner routes
 
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/student', studentRoutesBlockchain); // Blockchain routes for students
 app.use('/api/faculty', facultyRoutes);
+app.use('/api/chief', chiefRoutes); // Chief examiner workflow routes
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/admin', adminRoutesBlockchain); // Blockchain routes for admins
 app.use('/api/admin', questionPaperRoutes); // Question paper management routes (CREATE, READ, UPDATE rubrics)

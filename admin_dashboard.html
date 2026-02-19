@@ -84,6 +84,7 @@
             <a href="#" class="active">Dashboard</a>
             <a href="admin_check_marks.html">Check Marks</a>
             <a href="admin_payments.html">Payment History</a>
+            <a href="profile.html">Profile</a>
         </nav>
         <div class="auth-buttons">
             <button class="btn btn-secondary" onclick="logout()">Logout</button>
@@ -183,12 +184,22 @@
         // Check Admin
         (function () {
             const role = localStorage.getItem('userRole');
-            if (role !== 'admin') {
-                window.location.href = 'login.html';
+            const token = localStorage.getItem('token');
+            if (role !== 'admin' || !token) {
+                localStorage.clear();
+                window.location.href = 'login.html?role=admin';
             }
         })();
 
         let currentTab = 'reval';
+
+        // Helper: Get authorization header
+        function getAuthHeader() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            };
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             switchTab('reval');
@@ -215,7 +226,9 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '<tr><td colspan="5">Checking pending requests...</td></tr>';
             try {
-                const res = await fetch('http://localhost:5000/api/admin/reval-requests');
+                const res = await fetch('http://localhost:5000/api/admin/reval-requests', {
+                    headers: getAuthHeader()
+                });
                 const data = await res.json();
                 if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="5">No pending approvals.</td></tr>'; return; }
                 tbody.innerHTML = data.map(r => `
@@ -259,7 +272,9 @@
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '<tr><td colspan="5">Loading data...</td></tr>';
             try {
-                const response = await fetch(`http://localhost:5000/api/admin/users?role=${role}`);
+                const response = await fetch(`http://localhost:5000/api/admin/users?role=${role}`, {
+                    headers: getAuthHeader()
+                });
                 const users = await response.json();
                 if (users.length === 0) { tbody.innerHTML = '<tr><td colspan="5">No users found.</td></tr>'; return; }
                 tbody.innerHTML = users.map(u => `
@@ -303,7 +318,7 @@
             try {
                 const res = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeader(),
                     body: JSON.stringify({ name, email, department: dept })
                 });
                 const data = await res.json();
@@ -328,7 +343,7 @@
             try {
                 const res = await fetch('http://localhost:5000/api/admin/notifications', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeader(),
                     body: JSON.stringify({ title, message, audience })
                 });
 

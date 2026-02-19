@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const User = require('./models/User');
 const Result = require('./models/Result');
 const Notification = require('./models/Notification');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/examchain';
@@ -17,14 +18,50 @@ const seedData = async () => {
         await Result.deleteMany({});
         await Notification.deleteMany({});
 
-        // Users
+        // Hash passwords before inserting
+        const saltRounds = 10;
+        
         const users = [
-            { userId: '19A81A0501', password: 'password123', role: 'student', name: 'Satyasai', department: 'CSE' },
-            { userId: '19A81A0502', password: 'password123', role: 'student', name: 'John Doe', department: 'CSE' },
-            { userId: 'FAC001', password: 'admin123', role: 'faculty', name: 'Dr. Smith', department: 'CSE' }
+            { 
+                userId: '19A81A0501', 
+                password: await bcrypt.hash('password123', saltRounds), 
+                role: 'student', 
+                name: 'Satyasai', 
+                department: 'CSE',
+                rollNumber: '22MH1A0501'
+            },
+            { 
+                userId: '19A81A0502', 
+                password: await bcrypt.hash('password123', saltRounds), 
+                role: 'student', 
+                name: 'John Doe', 
+                department: 'CSE',
+                rollNumber: '22MH1A0502'
+            },
+            { 
+                userId: 'FAC001', 
+                password: await bcrypt.hash('admin123', saltRounds), 
+                role: 'faculty', 
+                name: 'Dr. Smith', 
+                department: 'CSE'
+            },
+            { 
+                userId: 'CHIEF001', 
+                password: await bcrypt.hash('chief123', saltRounds), 
+                role: 'chief', 
+                name: 'Dr. Chief Examiner', 
+                department: 'CSE'
+            },
+            { 
+                userId: 'ADMIN001', 
+                password: await bcrypt.hash('adminpass123', saltRounds), 
+                role: 'admin', 
+                name: 'Admin User', 
+                department: 'Administration'
+            }
         ];
         await User.insertMany(users);
-        console.log('Users seeded');
+        console.log('✅ Users seeded with hashed passwords');
 
         // Results
         const results = [

@@ -1,15 +1,55 @@
 function login() {
-    const id = document.getElementById('studentId').value.trim();
-    const pwd = document.getElementById('studentPassword').value.trim();
+    const userId = document.getElementById('userId').value.trim();
+    const password = document.getElementById('password').value.trim();
 
-    if (!id || !pwd) {
-      alert('Please enter both Student ID and Password.');
+    if (!userId || !password) {
+      alert('Please enter both ID and Password.');
       return;
     }
 
-    localStorage.setItem('loggedInUser', id);
-    // TODO: here you would normally verify id/pwd with a backend
+    // Get the current role from the login page
+    const role = currentRole || 'student';
 
-    // Redirect to index.html (same folder)
-    window.location.href = './index.html';  // or './index.html'
+    // Call backend API
+    fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            userId: userId,
+            password: password,
+            role: role
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Store token and user info in localStorage
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('loggedInUser', data.user.userId);
+            localStorage.setItem('userRole', data.user.role);
+            localStorage.setItem('userName', data.user.name);
+            
+            // Redirect based on role
+            const redirects = {
+                'student': './student_dashboard.html',
+                'faculty': './faculty_dashboard.html',
+                'admin': './admin_dashboard.html',
+                'chief': './chief_dashboard.html'
+            };
+            window.location.href = redirects[role] || './index.html';
+        } else {
+            alert('Login failed: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Login error:', error);
+        alert('Error connecting to server. Make sure the backend is running on http://localhost:5000');
+    });
   }

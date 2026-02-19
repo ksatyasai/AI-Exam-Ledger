@@ -45,6 +45,7 @@
       <div class="role-switch">
         <button class="role-btn active" id="btnStudent" onclick="setRole('student')">Student</button>
         <button class="role-btn" id="btnFaculty" onclick="setRole('faculty')">Faculty</button>
+        <button class="role-btn" id="btnChief" onclick="setRole('chief')">Chief</button>
         <button class="role-btn" id="btnAdmin" onclick="setRole('admin')">Admin</button>
       </div>
 
@@ -71,13 +72,13 @@
       const params = new URLSearchParams(window.location.search);
       const urlRole = params.get('role');
 
-      if (urlRole === 'student' || urlRole === 'faculty' || urlRole === 'admin') {
+      if (urlRole === 'student' || urlRole === 'faculty' || urlRole === 'admin' || urlRole === 'chief') {
         // Strict Mode
         setRole(urlRole);
         document.querySelector('.role-switch').style.display = 'none';
 
         // Update Header to be specific
-        const title = urlRole === 'student' ? 'Student Login' : (urlRole === 'faculty' ? 'Faculty Login' : 'Admin Login');
+        const title = urlRole === 'student' ? 'Student Login' : (urlRole === 'faculty' ? 'Faculty Login' : (urlRole === 'chief' ? 'Chief Login' : 'Admin Login'));
         document.querySelector('h2').innerText = title.toUpperCase();
       }
     });
@@ -86,11 +87,13 @@
       currentRole = role;
       document.getElementById('btnStudent').className = role === 'student' ? 'role-btn active' : 'role-btn';
       document.getElementById('btnFaculty').className = role === 'faculty' ? 'role-btn active' : 'role-btn';
+      document.getElementById('btnChief').className = role === 'chief' ? 'role-btn active' : 'role-btn';
       document.getElementById('btnAdmin').className = role === 'admin' ? 'role-btn active' : 'role-btn';
 
       let placeholder = 'Enter ID';
       if (role === 'student') placeholder = 'Enter Student ID';
       else if (role === 'faculty') placeholder = 'Enter Faculty ID';
+      else if (role === 'chief') placeholder = 'Enter Chief ID';
       else placeholder = 'Enter Admin ID';
 
       document.getElementById('userId').placeholder = placeholder;
@@ -110,24 +113,36 @@
       btn.disabled = true;
 
       try {
-        const response = await fetch('http://localhost:5000/api/auth/login', {
+        let endpoint = 'http://localhost:5000/api/auth/login';
+        let bodyData = { userId: id, password: pwd, role: currentRole };
+
+        // Use role-specific login for chief
+        if (currentRole === 'chief') {
+          endpoint = 'http://localhost:5000/api/chief/login';
+          bodyData = { chiefId: id, password: pwd };
+        }
+
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: id, password: pwd, role: currentRole })
+          body: JSON.stringify(bodyData)
         });
 
         const data = await response.json();
 
         if (data.success) {
           localStorage.setItem('userRole', data.user.role);
-          localStorage.setItem('userId', data.user.userId);
+          localStorage.setItem('userId', data.user.userId || data.user.chiefId);
           localStorage.setItem('userName', data.user.name);
+          localStorage.setItem('token', data.token);
 
           // Redirect
           if (data.user.role === 'student') {
             window.location.href = 'student_dashboard.html';
           } else if (data.user.role === 'faculty') {
             window.location.href = 'faculty_dashboard.html';
+          } else if (data.user.role === 'chief') {
+            window.location.href = 'chief_dashboard.html';
           } else {
             window.location.href = 'admin_dashboard.html';
           }

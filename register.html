@@ -43,11 +43,15 @@
             <div class="role-switch">
                 <button class="role-btn active" id="btnStudent" onclick="setRole('student')">Student</button>
                 <button class="role-btn" id="btnFaculty" onclick="setRole('faculty')">Faculty</button>
+                <button class="role-btn" id="btnChief" onclick="setRole('chief')">Chief</button>
             </div>
 
             <input type="text" id="userId" placeholder="Student ID (e.g. 19A81A...)" />
+            <input type="text" id="rollNumber" placeholder="Roll Number (e.g. 22MH1A0501 or 23MH1A0501)" />
             <input type="text" id="userName" placeholder="Full Name" />
             <input type="text" id="dept" placeholder="Department (e.g. CSE)" />
+            <input type="text" id="email" placeholder="Email Address" style="display: none;" />
+            <input type="text" id="subject" placeholder="Subject Specialty" style="display: none;" />
             <input type="password" id="password" placeholder="Create Password" />
 
             <button onclick="register()">REGISTER</button>
@@ -69,8 +73,25 @@
             currentRole = role;
             document.getElementById('btnStudent').className = role === 'student' ? 'role-btn active' : 'role-btn';
             document.getElementById('btnFaculty').className = role === 'faculty' ? 'role-btn active' : 'role-btn';
+            document.getElementById('btnChief').className = role === 'chief' ? 'role-btn active' : 'role-btn';
 
-            document.getElementById('userId').placeholder = role === 'student' ? 'Student ID (e.g. 19A81A...)' : 'Faculty ID';
+            // Update placeholder and visibility of fields
+            if (role === 'student') {
+                document.getElementById('userId').placeholder = 'Student ID (e.g. 19A81A...)';
+                document.getElementById('rollNumber').style.display = 'block';
+                document.getElementById('email').style.display = 'none';
+                document.getElementById('subject').style.display = 'none';
+            } else if (role === 'faculty') {
+                document.getElementById('userId').placeholder = 'Faculty ID';
+                document.getElementById('rollNumber').style.display = 'none';
+                document.getElementById('email').style.display = 'none';
+                document.getElementById('subject').style.display = 'none';
+            } else if (role === 'chief') {
+                document.getElementById('userId').placeholder = 'Chief ID';
+                document.getElementById('rollNumber').style.display = 'none';
+                document.getElementById('email').style.display = 'block';
+                document.getElementById('subject').style.display = 'block';
+            }
         }
 
         async function register() {
@@ -78,10 +99,23 @@
             const name = document.getElementById('userName').value.trim();
             const dept = document.getElementById('dept').value.trim();
             const pwd = document.getElementById('password').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const rollNumber = document.getElementById('rollNumber').value.trim();
             const btn = document.querySelector('button[onclick="register()"]');
 
             if (!id || !name || !pwd || !dept) {
-                alert('Please fill all fields.');
+                alert('Please fill all required fields.');
+                return;
+            }
+
+            if (currentRole === 'student' && !rollNumber) {
+                alert('Roll Number is required for Student registration.');
+                return;
+            }
+
+            if (currentRole === 'chief' && !email) {
+                alert('Email is required for Chief registration.');
                 return;
             }
 
@@ -89,23 +123,44 @@
             btn.disabled = true;
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/register', {
+                let endpoint = 'http://localhost:5000/api/auth/register';
+                let bodyData = {
+                    userId: id,
+                    password: pwd,
+                    role: currentRole,
+                    name: name,
+                    department: dept
+                };
+
+                // Add rollNumber only for students
+                if (currentRole === 'student') {
+                    bodyData.rollNumber = rollNumber;
+                }
+
+                // Use role-specific register for chief
+                if (currentRole === 'chief') {
+                    endpoint = 'http://localhost:5000/api/chief/register';
+                    bodyData = {
+                        chiefId: id,
+                        password: pwd,
+                        name: name,
+                        email: email,
+                        department: dept,
+                        subject: subject
+                    };
+                }
+
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: id,
-                        password: pwd,
-                        role: currentRole,
-                        name: name,
-                        department: dept
-                    })
+                    body: JSON.stringify(bodyData)
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
                     alert('Registration Successful! Please Login.');
-                    window.location.href = 'login.html';
+                    window.location.href = 'login.html?role=' + currentRole;
                 } else {
                     alert(data.message || 'Registration failed');
                     btn.innerText = 'REGISTER';

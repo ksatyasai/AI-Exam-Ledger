@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - ExamChain</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #fff;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #1e293b;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #4f46e5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            flex: 1;
+            width: 100%;
+        }
+
+        .profile-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .user-info h2 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin: 0;
+            color: #0f172a;
+        }
+
+        .user-role {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: #e0e7ff;
+            color: #4f46e5;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .detail-item label {
+            display: block;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .detail-item p {
+            font-size: 1.125rem;
+            color: #334155;
+            font-weight: 500;
+            margin: 0;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid transparent;
+        }
+
+        .detail-item input {
+            width: 100%;
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            margin-top: 0.25rem;
+        }
+
+        .detail-item input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .actions {
+            margin-top: 3rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #4338ca;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <a href="#" id="dashboardLink" class="logo">Exam<span>Chain</span></a>
+        <button id="logoutBtn" class="btn btn-secondary" onclick="logout()">Logout</button>
+    </header>
+
+    <div class="container">
+        <div class="profile-card">
+
+            <div id="loading" class="loading">Loading Profile...</div>
+
+            <div id="profileContent" class="hidden">
+                <div class="profile-header">
+                    <div class="avatar-placeholder" id="avatar">U</div>
+                    <div class="user-info">
+                        <h2 id="displayName">User Name</h2>
+                        <span class="user-role" id="displayRole">Role</span>
+                    </div>
+                </div>
+
+                <!-- View Mode -->
+                <div id="viewMode" class="detail-grid">
+                    <div class="detail-item">
+                        <label>User ID</label>
+                        <p id="viewId">--</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Department</label>
+                        <p id="viewDept">--</p>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email</label>
+                        <p id="viewEmail">--</p>
+                    </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <form id="editForm" class="hidden">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>User ID</label>
+                            <p id="editIdDisplay" style="color: #94a3b8; cursor: not-allowed;">--</p>
+                            <!-- ID is distinct and typically not editable by user -->
+                        </div>
+                        <div class="detail-item">
+                            <label>Full Name</label>
+                            <input type="text" id="editName" required>
+                        </div>
+                        <div class="detail-item">
+                            <label>Department</label>
+                            <input type="text" id="editDept">
+                        </div>
+                        <div class="detail-item">
+                            <label>Email</label>
+                            <input type="email" id="editEmail">
+                        </div>
+                        <div class="detail-item">
+                            <label>New Password (Optional)</label>
+                            <input type="password" id="editPassword" placeholder="Leave blank to keep current">
+                        </div>
+                    </div>
+                </form>
+
+                <div class="actions">
+                    <button id="cancelBtn" class="btn btn-secondary hidden" onclick="toggleEdit(false)">Cancel</button>
+                    <button id="editBtn" class="btn btn-primary" onclick="toggleEdit(true)">Edit Profile</button>
+                    <button id="saveBtn" class="btn btn-primary hidden" onclick="saveProfile()">Save Changes</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api/auth';
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const role = localStorage.getItem('userRole');
+            const userId = localStorage.getItem('userId');
+
+            if (!role || !userId) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Set Dashboard Link
+            const link = document.getElementById('dashboardLink');
+            if (role === 'student') link.href = 'student_dashboard.html';
+            else if (role === 'faculty') link.href = 'faculty_dashboard.html';
+            else if (role === 'admin') link.href = 'admin_dashboard.html';
+            else link.href = 'index.html';
+
+            await fetchProfile(userId);
+        });
+
+        async function fetchProfile(userId) {
+            try {
+                const res = await fetch(`${API_BASE}/profile?userId=${userId}`);
+                const data = await res.json();
+
+                if (data.success) {
+                    currentUser = data.user;
+                    renderProfile(currentUser);
+                } else {
+                    alert('Failed to load profile: ' + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error fetching profile.');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('profileContent').classList.remove('hidden');
+            }
+        }
+
+        function renderProfile(user) {
+            // Header
+            document.getElementById('displayName').innerText = user.name;
+            document.getElementById('displayRole').innerText = user.role;
+            document.getElementById('avatar').innerText = user.name.charAt(0).toUpperCase();
+
+            // View Mode
+            document.getElementById('viewId').innerText = user.userId;
+            document.getElementById('viewDept').innerText = user.department || 'N/A';
+            document.getElementById('viewEmail').innerText = user.email || 'N/A';
+
+            // Edit Mode Pre-fill
+            document.getElementById('editIdDisplay').innerText = user.userId;
+            document.getElementById('editName').value = user.name;
+            document.getElementById('editDept').value = user.department || '';
+            document.getElementById('editEmail').value = user.email || '';
+        }
+
+        function toggleEdit(isEdit) {
+            const viewMode = document.getElementById('viewMode');
+            const editForm = document.getElementById('editForm');
+            const editBtn = document.getElementById('editBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            if (isEdit) {
+                viewMode.classList.add('hidden');
+                editForm.classList.remove('hidden');
+                editBtn.classList.add('hidden');
+                saveBtn.classList.remove('hidden');
+                cancelBtn.classList.remove('hidden');
+            } else { // Cancel
+                viewMode.classList.remove('hidden');
+                editForm.classList.add('hidden');
+                editBtn.classList.remove('hidden');
+                saveBtn.classList.add('hidden');
+                cancelBtn.classList.add('hidden');
+                // Reset form to cached data
+                if (currentUser) renderProfile(currentUser);
+            }
+        }
+
+        async function saveProfile() {
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.innerText = 'Saving...';
+            saveBtn.disabled = true;
+
+            const updatedData = {
+                userId: currentUser.userId,
+                name: document.getElementById('editName').value,
+                department: document.getElementById('editDept').value,
+                email: document.getElementById('editEmail').value,
+                password: document.getElementById('editPassword').value
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('Profile Updated Successfully!');
+                    currentUser = data.user;
+                    // Update LocalStorage if name changed
+                    localStorage.setItem('userName', currentUser.name);
+
+                    renderProfile(currentUser);
+                    toggleEdit(false);
+                } else {
+                    alert('Update failed: ' + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error updating profile.');
+            } finally {
+                saveBtn.innerText = 'Save Changes';
+                saveBtn.disabled = false;
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

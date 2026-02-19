@@ -17,6 +17,31 @@ router.get('/results/:studentId', async (req, res) => {
     }
 });
 
+// GET /api/student/result/:studentId/:resultId - Get specific result details
+router.get('/result/:studentId/:resultId', async (req, res) => {
+    try {
+        const { studentId, resultId } = req.params;
+        const result = await Result.findOne({ _id: resultId, studentId: studentId });
+        
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                message: 'Result not found or does not belong to this student'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
+
 // GET /api/student/notifications
 router.get('/notifications', async (req, res) => {
     try {

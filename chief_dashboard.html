@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chief Dashboard - ExamChain</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar h1 {
+            font-size: 1.8rem;
+        }
+
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .navbar .logout-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .navbar .logout-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .sidebar h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .sidebar-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sidebar-stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .stat-value {
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .assignments-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .assignment-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            border-left: 4px solid #667eea;
+        }
+
+        .assignment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .assignment-card h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .assignment-card p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0.3rem 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #ffc107;
+            color: #333;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+
+        .marks-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .marks-box {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 2px solid #eee;
+        }
+
+        .marks-box h4 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .marks-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 1rem 0;
+        }
+
+        .marks-display.ai {
+            color: #667eea;
+        }
+
+        .marks-display.chief {
+            color: #764ba2;
+        }
+
+        .breakdown-list {
+            background: white;
+            padding: 1rem;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-item label {
+            font-weight: 600;
+        }
+
+        .breakdown-item span {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .question-marks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .question-mark-input {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .question-mark-input label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .question-mark-input input {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .pdf-viewer {
+            background: #f0f0f0;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .pdf-placeholder {
+            color: #666;
+        }
+
+        .pdf-link {
+            color: #667eea;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            width: 600px;
+        }
+
+        .modal-header {
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            background: none;
+            border: none;
+            padding: 0;
+            margin-top: -1rem;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .notifications {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            background: #f9f9f9;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .notification-item h4 {
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .notification-item p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0.3rem 0;
+        }
+
+        .notification-date {
+            color: #999;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #667eea;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+            }
+
+            .marks-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .assignments-list {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navbar -->
+    <div class="navbar">
+        <h1>👨‍🏫 Chief Examiner Dashboard</h1>
+        <div class="user-info">
+            <span id="chiefName">Loading...</span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="dashboard-grid">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h3>📊 Status</h3>
+                <div class="sidebar-stat">
+                    <span class="stat-label">Pending</span>
+                    <span class="stat-value" id="pendingCount">0</span>
+                </div>
+                <div class="sidebar-stat">
+                    <span class="stat-label">Submitted</span>
+                    <span class="stat-value" id="submittedCount">0</span>
+                </div>
+                <div class="sidebar-stat">
+                    <span class="stat-label">Approved</span>
+                    <span class="stat-value" id="approvedCount">0</span>
+                </div>
+
+                <h3 style="margin-top: 1.5rem;">🔔 Quick Actions</h3>
+                <button class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;" onclick="switchTab('assignments')">
+                    📋 View Assignments
+                </button>
+                <button class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;" onclick="switchTab('notifications')">
+                    🔔 Notifications
+                </button>
+                <button class="btn btn-secondary" style="width: 100%;" onclick="loadProfile()">
+                    👤 My Profile
+                </button>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Alerts -->
+                <div id="alerts"></div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('assignments')">📋 Assignments</button>
+                    <button class="tab-btn" onclick="switchTab('notifications')">🔔 Notifications</button>
+                    <button class="tab-btn" onclick="switchTab('profile')">👤 Profile</button>
+                </div>
+
+                <!-- Tab 1: Assignments -->
+                <div id="assignments-tab" class="tab-content active">
+                    <h2 style="margin-bottom: 1.5rem;">Pending Revaluation Assignments</h2>
+                    <div id="assignments-loading" class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading assignments...</p>
+                    </div>
+                    <div id="assignments-list" class="assignments-list" style="display: none;"></div>
+                    <div id="assignments-empty" class="no-data" style="display: none;">
+                        <p>✅ No pending assignments. Well done!</p>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Notifications -->
+                <div id="notifications-tab" class="tab-content">
+                    <h2 style="margin-bottom: 1.5rem;">Your Notifications</h2>
+                    <div id="notifications-loading" class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading notifications...</p>
+                    </div>
+                    <div id="notifications-list" class="notifications" style="display: none;"></div>
+                    <div id="notifications-empty" class="no-data" style="display: none;">
+                        <p>📭 No notifications yet</p>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Profile -->
+                <div id="profile-tab" class="tab-content">
+                    <h2 style="margin-bottom: 1.5rem;">Chief Examiner Profile</h2>
+                    <div id="profile-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Assignment Modal -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeReviewModal()">&times;</button>
+                <h2>Review Student Submission</h2>
+            </div>
+
+            <div id="reviewContent" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Student Info -->
+                <div class="form-group">
+                    <label>Student Name:</label>
+                    <p id="reviewStudentName" style="font-weight: bold; color: #667eea;"></p>
+                </div>
+                <div class="form-group">
+                    <label>Roll Number:</label>
+                    <p id="reviewStudentRoll" style="font-weight: bold; color: #667eea;"></p>
+                </div>
+                <div class="form-group">
+                    <label>Subject:</label>
+                    <p id="reviewSubject" style="font-weight: bold; color: #667eea;"></p>
+                </div>
+
+                <!-- PDF Viewer -->
+                <div class="form-group">
+                    <label>Answer Script:</label>
+                    <div class="pdf-viewer" id="pdfViewer">
+                        <div class="pdf-placeholder">
+                            <p>📄 Answer script will be displayed here</p>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                                <a href="#" id="downloadLink" class="pdf-link">Download PDF</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Marks Comparison -->
+                <div class="marks-comparison">
+                    <div class="marks-box">
+                        <h4>AI Evaluated Marks</h4>
+                        <div class="marks-display ai" id="reviewAiMarks">--</div>
+                        <div class="breakdown-list" id="reviewAiBreakdown"></div>
+                    </div>
+                    <div class="marks-box">
+                        <h4>Your Submitted Marks</h4>
+                        <div class="marks-display chief" id="reviewChiefMarks">--</div>
+                        <div class="breakdown-list" id="reviewChiefBreakdown"></div>
+                    </div>
+                </div>
+
+                <!-- Marks Submission Form -->
+                <h3 style="margin-top: 2rem; color: #667eea;">Submit Your Marks</h3>
+
+                <div class="form-group">
+                    <label>Total Marks (0-100):</label>
+                    <input type="number" id="totalMarksInput" min="0" max="100" placeholder="Enter total marks">
+                </div>
+
+                <div class="form-group">
+                    <label>Question-wise Marks:</label>
+                    <div class="question-marks-grid" id="questionMarksGrid"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Comments (Optional):</label>
+                    <textarea id="commentsInput" placeholder="Add any comments about your marks or corrections..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="submitChiefMarks()">✅ Submit Marks</button>
+                    <button class="btn btn-secondary" onclick="closeReviewModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        const UPLOAD_BASE = 'http://localhost:5000';
+        let chiefId = localStorage.getItem('loggedInUser') || localStorage.getItem('userId');
+
+        // Helper function to get full file URL
+        function getFileUrl(filePath) {
+            if (!filePath) return null;
+            if (filePath.startsWith('http')) return filePath;
+            return `${UPLOAD_BASE}/${filePath}`;
+        }
+        let userRole = localStorage.getItem('userRole');
+        let token = localStorage.getItem('token');
+        let currentResultId = null;
+        let currentReviewData = null;
+
+        // Helper: Get authorization header
+        function getAuthHeader() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in AND has chief role
+            if (!chiefId || userRole !== 'chief' || !token) {
+                localStorage.clear();
+                window.location.href = 'login.html?role=chief';
+                return;
+            }
+            loadAssignments();
+            loadProfile();
+        });
+
+        // Switch Tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'assignments') loadAssignments();
+            if (tabName === 'notifications') loadNotifications();
+            if (tabName === 'profile') loadProfile();
+        }
+
+        // Load Assignments
+        async function loadAssignments() {
+            const loading = document.getElementById('assignments-loading');
+            const list = document.getElementById('assignments-list');
+            const empty = document.getElementById('assignments-empty');
+
+            loading.style.display = 'block';
+            list.style.display = 'none';
+            empty.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/chief/assignments/${chiefId}`, {
+                    headers: getAuthHeader()
+                });
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    list.innerHTML = data.data.map(result => `
+                        <div class="assignment-card" onclick="openReviewModal('${result._id}')">
+                            <h4>📚 ${result.subjectCode || 'N/A'}</h4>
+                            <p><strong>Student:</strong> ${result.studentId}</p>
+                            <p><strong>Status:</strong> <span class="status-badge">${result.revaluationStatus.toUpperCase()}</span></p>
+                            <p><strong>AI Marks:</strong> ${result.aiMarks}/100</p>
+                            <p style="color: #667eea; font-weight: bold;">Click to review ➜</p>
+                        </div>
+                    `).join('');
+                    list.style.display = 'grid';
+                    document.getElementById('pendingCount').textContent = data.data.length;
+                } else {
+                    empty.style.display = 'block';
+                    document.getElementById('pendingCount').textContent = '0';
+                }
+            } catch (err) {
+                showAlert('Error loading assignments: ' + err.message, 'error');
+            }
+
+            loading.style.display = 'none';
+        }
+
+        // Open Review Modal
+        async function openReviewModal(resultId) {
+            currentResultId = resultId;
+
+            try {
+                const response = await fetch(`${API_BASE}/chief/assignment/${resultId}`, {
+                    headers: getAuthHeader()
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    showAlert('Error: ' + data.message, 'error');
+                    return;
+                }
+
+                currentReviewData = data.data;
+
+                // Populate modal - with null checks
+                const studentNameEl = document.getElementById('reviewStudentName');
+                const studentRollEl = document.getElementById('reviewStudentRoll');
+                const subjectEl = document.getElementById('reviewSubject');
+                const aiMarksEl = document.getElementById('reviewAiMarks');
+                const aiBreakdownEl = document.getElementById('reviewAiBreakdown');
+                
+                if (!studentNameEl || !studentRollEl || !subjectEl || !aiMarksEl || !aiBreakdownEl) {
+                    throw new Error('Modal elements not found in DOM');
+                }
+                
+                studentNameEl.textContent = currentReviewData.studentName || currentReviewData.studentId;
+                studentRollEl.textContent = currentReviewData.rollNumber || 'N/A';
+                subjectEl.textContent = currentReviewData.subjectCode || 'N/A';
+
+                // AI Marks
+                aiMarksEl.textContent = (currentReviewData.aiMarks || 0) + '/100';
+                const aiBreakdownHTML = currentReviewData.aiBreakdown && Array.isArray(currentReviewData.aiBreakdown) && currentReviewData.aiBreakdown.length > 0 ? currentReviewData.aiBreakdown.map(q => `
+                    <div class="breakdown-item">
+                        <label>${q.question || 'Q' + (q.qNo || '?')}</label>
+                        <span>${q.marks}/${q.totalMarks}</span>
+                    </div>
+                `).join('') : '<p>No breakdown available</p>';
+                aiBreakdownEl.innerHTML = aiBreakdownHTML;
+
+                // PDF Link
+                const pdfPath = currentReviewData.answerScriptPath;
+                const downloadLinkEl = document.getElementById('downloadLink');
+                const pdfViewerEl = document.getElementById('pdfViewer');
+                
+                if (downloadLinkEl && pdfViewerEl) {
+                    if (pdfPath) {
+                        // Construct full URL for PDF - handle both relative and absolute paths
+                        const fullPdfUrl = pdfPath.startsWith('http') ? pdfPath : `http://localhost:5000/${pdfPath}`;
+                        downloadLinkEl.href = fullPdfUrl;
+                        downloadLinkEl.textContent = 'Download Answer Script';
+                        pdfViewerEl.innerHTML = `
+                            <div class="pdf-placeholder">
+                                <p>📄 Answer script is available</p>
+                                <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                                    <a href="${fullPdfUrl}" class="pdf-link" target="_blank">Download PDF</a> | 
+                                    <a href="${fullPdfUrl}" class="pdf-link" onclick="viewPdfInline('${fullPdfUrl}'); return false;">View Online</a>
+                                </p>
+                            </div>
+                        `;
+                    } else {
+                        pdfViewerEl.innerHTML = '<div class="pdf-placeholder"><p>📄 No answer script attached</p></div>';
+                    }
+                } else {
+                    console.warn('PDF viewer elements not found in DOM');
+                }
+
+                // Create question marks input grid
+                const numQuestions = currentReviewData.aiBreakdown && Array.isArray(currentReviewData.aiBreakdown) ? currentReviewData.aiBreakdown.length : 5;
+                let gridHTML = '';
+                for (let i = 1; i <= numQuestions; i++) {
+                    const aiQ = currentReviewData.aiBreakdown && currentReviewData.aiBreakdown[i - 1];
+                    const maxMarks = aiQ ? aiQ.totalMarks : 20;
+                    gridHTML += `
+                        <div class="question-mark-input">
+                            <label>Q${i} (/${maxMarks})</label>
+                            <input type="number" id="q${i}Marks" min="0" max="${maxMarks}" placeholder="0">
+                        </div>
+                    `;
+                }
+                
+                const questionMarksGridEl = document.getElementById('questionMarksGrid');
+                if (questionMarksGridEl) {
+                    questionMarksGridEl.innerHTML = gridHTML;
+                }
+
+                // Show current chief marks if already submitted
+                if (currentReviewData.chiefMarks !== undefined && currentReviewData.chiefMarks !== null) {
+                    const totalMarksInputEl = document.getElementById('totalMarksInput');
+                    const reviewChiefMarksEl = document.getElementById('reviewChiefMarks');
+                    const reviewChiefBreakdownEl = document.getElementById('reviewChiefBreakdown');
+                    
+                    if (totalMarksInputEl) {
+                        totalMarksInputEl.value = currentReviewData.chiefMarks;
+                    }
+                    if (reviewChiefMarksEl) {
+                        reviewChiefMarksEl.textContent = currentReviewData.chiefMarks + '/100';
+                    }
+                    if (reviewChiefBreakdownEl && currentReviewData.chiefBreakdown && Array.isArray(currentReviewData.chiefBreakdown)) {
+                        const chiefBreakdownHTML = currentReviewData.chiefBreakdown.map(q => `
+                            <div class="breakdown-item">
+                                <label>${q.question || 'Q' + (q.qNo || '?')}</label>
+                                <span>${q.marks}/${q.totalMarks}</span>
+                            </div>
+                        `).join('');
+                        reviewChiefBreakdownEl.innerHTML = chiefBreakdownHTML;
+                    }
+                    const commentsInputEl = document.getElementById('commentsInput');
+                    if (commentsInputEl) {
+                        commentsInputEl.value = currentReviewData.chiefComments || '';
+                    }
+                } else {
+                    const reviewChiefMarksEl = document.getElementById('reviewChiefMarks');
+                    const reviewChiefBreakdownEl = document.getElementById('reviewChiefBreakdown');
+                    
+                    if (reviewChiefMarksEl) {
+                        reviewChiefMarksEl.textContent = '-- Not submitted yet';
+                    }
+                    if (reviewChiefBreakdownEl) {
+                        reviewChiefBreakdownEl.innerHTML = '<p style="color: #999;">Awaiting your marks submission</p>';
+                    }
+                }
+
+                const reviewModalEl = document.getElementById('reviewModal');
+                if (reviewModalEl) {
+                    reviewModalEl.classList.add('active');
+                }
+            } catch (err) {
+                showAlert('Error opening assignment: ' + err.message, 'error');
+                console.error(err);
+            }
+        }
+
+        // Close Review Modal
+        function closeReviewModal() {
+            const reviewModalEl = document.getElementById('reviewModal');
+            if (reviewModalEl) {
+                reviewModalEl.classList.remove('active');
+            }
+            currentResultId = null;
+            currentReviewData = null;
+        }
+
+        // Submit Chief Marks
+        async function submitChiefMarks() {
+            const totalMarksInputEl = document.getElementById('totalMarksInput');
+            const commentsInputEl = document.getElementById('commentsInput');
+            
+            if (!totalMarksInputEl || !commentsInputEl) {
+                showAlert('Form elements not found. Please reload the page.', 'error');
+                return;
+            }
+            
+            const totalMarks = parseFloat(totalMarksInputEl.value);
+            const comments = commentsInputEl.value;
+
+            // Validate required fields
+            if (!currentResultId) {
+                showAlert('Error: Result ID not found. Please reload and try again.', 'error');
+                console.error('currentResultId is null');
+                return;
+            }
+
+            if (!chiefId) {
+                showAlert('Error: Chief ID not found. Please login again.', 'error');
+                console.error('chiefId is null');
+                return;
+            }
+
+            if (isNaN(totalMarks) || totalMarks < 0 || totalMarks > 100) {
+                showAlert('Please enter valid marks between 0 and 100', 'error');
+                return;
+            }
+
+            // Gather question marks
+            const breakdown = [];
+            const questions = currentReviewData.aiBreakdown || [];
+            for (let i = 0; i < questions.length; i++) {
+                const marks = parseFloat(document.getElementById(`q${i + 1}Marks`).value) || 0;
+                breakdown.push({
+                    qNo: i + 1,
+                    question: questions[i].question || `Question ${i + 1}`,
+                    marks: marks,
+                    totalMarks: questions[i].totalMarks
+                });
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/chief/submit-marks`, {
+                    method: 'POST',
+                    headers: getAuthHeader(),
+                    body: JSON.stringify({
+                        resultId: currentResultId,
+                        chiefId: chiefId,
+                        marks: totalMarks,
+                        breakdown: breakdown,
+                        comments: comments
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('✅ Marks submitted successfully! Admin will review soon.', 'success');
+                    closeReviewModal();
+                    loadAssignments();
+                } else {
+                    showAlert('Error: ' + data.message, 'error');
+                }
+            } catch (err) {
+                showAlert('Error submitting marks: ' + err.message, 'error');
+            }
+        }
+
+        // Load Notifications
+        async function loadNotifications() {
+            const loading = document.getElementById('notifications-loading');
+            const list = document.getElementById('notifications-list');
+            const empty = document.getElementById('notifications-empty');
+
+            loading.style.display = 'block';
+            list.style.display = 'none';
+            empty.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/chief/notifications/${chiefId}`, {
+                    headers: getAuthHeader()
+                });
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    list.innerHTML = data.data.map(notif => `
+                        <div class="notification-item">
+                            <h4>${notif.title}</h4>
+                            <p>${notif.message}</p>
+                            <div class="notification-date">${new Date(notif.date).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                    list.style.display = 'block';
+                } else {
+                    empty.style.display = 'block';
+                }
+            } catch (err) {
+                showAlert('Error loading notifications: ' + err.message, 'error');
+            }
+
+            loading.style.display = 'none';
+        }
+
+        // Load Profile
+        async function loadProfile() {
+            try {
+                const response = await fetch(`${API_BASE}/chief/profile/${chiefId}`, {
+                    headers: getAuthHeader()
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const chief = data.data;
+                    document.getElementById('chiefName').textContent = chief.name || 'Chief Examiner';
+                    
+                    document.getElementById('profile-content').innerHTML = `
+                        <div class="form-group">
+                            <label>Name:</label>
+                            <p style="color: #667eea; font-weight: bold;">${chief.name}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Email:</label>
+                            <p style="color: #667eea; font-weight: bold;">${chief.email}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Department:</label>
+                            <p style="color: #667eea; font-weight: bold;">${chief.department}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Subject Specialty:</label>
+                            <p style="color: #667eea; font-weight: bold;">${chief.subject}</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Status:</label>
+                            <p style="color: ${chief.isActive ? '#28a745' : '#dc3545'}; font-weight: bold;">
+                                ${chief.isActive ? '✅ Active' : '❌ Inactive'}
+                            </p>
+                        </div>
+                        <div class="form-group">
+                            <label>Pending Assignments:</label>
+                            <p style="color: #667eea; font-weight: bold;">${chief.pendingCount} assignment(s)</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Member Since:</label>
+                            <p style="color: #667eea; font-weight: bold;">${new Date(chief.createdAt).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                showAlert('Error loading profile: ' + err.message, 'error');
+            }
+        }
+
+        // View PDF Inline
+        // View PDF Inline
+        function viewPdfInline(pdfPath) {
+            if (!pdfPath) {
+                showAlert('PDF path not available', 'error');
+                return;
+            }
+            
+            // Use embed in a floating window or iframe
+            const pdfViewer = document.getElementById('pdfViewer');
+            if (!pdfViewer) {
+                showAlert('PDF viewer element not found', 'error');
+                return;
+            }
+            
+            pdfViewer.innerHTML = `
+                <div style="width: 100%; height: 500px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                    <iframe src="${pdfPath}" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+                <p style="text-align: center; margin-top: 1rem; color: #666;">
+                    <a href="${pdfPath}" target="_blank" class="pdf-link">Open in new tab</a> | 
+                    <a href="#" onclick="location.reload(); return false;" class="pdf-link">Close</a>
+                </p>
+            `;
+        }
+
+        // Show Alert
+        function showAlert(message, type = 'info') {
+            const alerts = document.getElementById('alerts');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alerts.appendChild(alertDiv);
+
+            setTimeout(() => alertDiv.remove(), 4000);
+        }
+
+        // Logout
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        // Refresh every 30 seconds
+        setInterval(() => {
+            if (document.getElementById('assignments-tab').classList.contains('active')) {
+                loadAssignments();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

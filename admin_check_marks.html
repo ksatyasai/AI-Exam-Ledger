@@ -407,6 +407,7 @@
             <a href="admin_dashboard.html">Dashboard</a>
             <a href="#" class="active">Check Marks</a>
             <a href="admin_payments.html">Payment History</a>
+            <a href="profile.html">Profile</a>
         </nav>
         <div class="auth-buttons">
             <button class="btn btn-secondary" onclick="logout()">Logout</button>
@@ -424,9 +425,13 @@
 
         <!-- Tabs -->
         <div class="tabs-container">
-            <button class="tab-button active" data-tab="create-rubric" onclick="switchTab('create-rubric')">📋 Create Question Paper</button>
-            <button class="tab-button" data-tab="view-rubrics" onclick="switchTab('view-rubrics')">📚 View Question Papers</button>
-            <button class="tab-button" data-tab="check-marks" onclick="switchTab('check-marks')">✅ Check Student Marks</button>
+            <button class="tab-button active" data-tab="create-rubric" onclick="switchTab('create-rubric')">📋 Create
+                Question Paper</button>
+            <button class="tab-button" data-tab="view-rubrics" onclick="switchTab('view-rubrics')">📚 View Question
+                Papers</button>
+            <button class="tab-button" data-tab="check-marks" onclick="switchTab('check-marks')">✅ Check Student
+                Marks</button>
+            <button class="tab-button" data-tab="approvals" onclick="switchTab('approvals')">🔍 Chief Approvals</button>
         </div>
 
         <!-- ===== TAB 1: CREATE QUESTION PAPER ===== -->
@@ -445,7 +450,8 @@
 
                     <div class="form-group">
                         <label class="form-label">Subject Name *</label>
-                        <input type="text" id="subjectName" class="form-input" placeholder="e.g., Blockchain Systems" required>
+                        <input type="text" id="subjectName" class="form-input" placeholder="e.g., Blockchain Systems"
+                            required>
                         <small style="color: var(--text-muted); display: block; margin-top: 0.3rem;">
                             Full name of the subject
                         </small>
@@ -465,9 +471,12 @@
                     </button>
                 </div>
 
-                <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                    <button id="submitBtn" type="submit" class="btn btn-primary" style="flex: 1;">Submit Question Paper</button>
-                    <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="resetForm()">Clear Form</button>
+                <div
+                    style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <button id="submitBtn" type="submit" class="btn btn-primary" style="flex: 1;">Submit Question
+                        Paper</button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="resetForm()">Clear
+                        Form</button>
                 </div>
             </form>
         </div>
@@ -533,6 +542,37 @@
                 </table>
             </div>
         </div>
+
+        <!-- ===== TAB 4: CHIEF APPROVALS ===== -->
+        <div id="approvals" class="tab-content">
+            <div class="admin-controls">
+                <button class="btn btn-primary" onclick="loadApprovalsData()">🔄 Refresh Approvals</button>
+                <span style="color: var(--text-muted); margin-left: auto;">
+                    <strong id="approvalsCount">0</strong> pending approvals
+                </span>
+            </div>
+
+            <div class="card" style="padding: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Subject Code</th>
+                            <th>AI Marks</th>
+                            <th>Chief Marks</th>
+                            <th>Chief Comments</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="approvalsTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 2rem;">Loading approvals...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
 
     <!-- Modal for Viewing Question Paper Details -->
@@ -557,6 +597,19 @@
             </div>
             <div id="evaluationBody">
                 <!-- Evaluation details will be filled here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Selecting Chief -->
+    <div id="chiefSelectorModal" class="modal" onclick="closeChiefModal(event)" style="display: none;">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">Select Chief Examiner</h2>
+                <button class="modal-close" onclick="closeChiefModal()">×</button>
+            </div>
+            <div id="chiefListContainer">
+                <!-- Chiefs will be loaded here -->
             </div>
         </div>
     </div>
@@ -597,6 +650,8 @@
                 loadQuestionPapers();
             } else if (tabName === 'check-marks') {
                 loadMarks();
+            } else if (tabName === 'approvals') {
+                loadApprovalsData();
             }
         }
 
@@ -1102,6 +1157,11 @@
             document.getElementById('evaluationModal').classList.remove('active');
         }
 
+        function closeChiefModal(event) {
+            if (event && event.target.id !== 'chiefSelectorModal') return;
+            document.getElementById('chiefSelectorModal').style.display = 'none';
+        }
+
         // ===== UTILITIES =====
         function showAlert(message, type) {
             const alertBox = document.getElementById('alertBox');
@@ -1118,9 +1178,225 @@
             window.location.href = 'index.html';
         }
 
+        // ===== CHIEF APPROVALS =====
+        async function loadApprovalsData() {
+            const tbody = document.getElementById('approvalsTableBody');
+            
+            try {
+                const response = await fetch(`${API_URL}/admin/reval-requests`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    }
+                });
+                const result = await response.json();
+                
+                console.log('Approvals response:', result); // Debug log
+                
+                if (!result.success) {
+                    showAlert('Error: ' + result.message, 'error');
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: red;">Error loading approvals</td></tr>';
+                    return;
+                }
+
+                const approvalsData = result.data || [];
+                
+                if (!Array.isArray(approvalsData) || approvalsData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No pending approvals. All revaluations have been processed.</td></tr>';
+                    document.getElementById('approvalsCount').textContent = '0';
+                    return;
+                }
+
+                // Filter to show only items with Chief marks submitted
+                const withChiefMarks = approvalsData.filter(r => r.chiefMarks !== null && r.chiefMarks !== undefined);
+                const withoutChiefMarks = approvalsData.filter(r => r.chiefMarks === null || r.chiefMarks === undefined);
+
+                document.getElementById('approvalsCount').textContent = withChiefMarks.length;
+
+                let html = '';
+
+                // Show items with Chief marks first
+                if (withChiefMarks.length > 0) {
+                    html += withChiefMarks.map(r => {
+                        const statusClass = r.revaluationStatus === 'pending_approval' ? 'status-pending' : 'status-approved';
+                        const statusText = r.revaluationStatus === 'pending_approval' ? 'Awaiting Approval' : 'Approved';
+
+                        return `
+                            <tr style="background: rgba(16, 185, 129, 0.1);">
+                                <td style="font-family: monospace; color: var(--primary);">${r.studentId}</td>
+                                <td><strong>${r.subjectCode || '-'}</strong></td>
+                                <td style="color: var(--accent); font-weight: bold;">${r.aiMarks || '-'}</td>
+                                <td style="color: #10b981; font-weight: bold;">${r.chiefMarks}</td>
+                                <td style="font-size: 0.9rem; color: var(--text-muted);">${r.chiefComments ? r.chiefComments.substring(0, 30) + '...' : 'No comments'}</td>
+                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                                <td>
+                                    <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-right: 0.3rem;" 
+                                        onclick="approveChiefMarks('${r._id}', true)">✅ Approve</button>
+                                    <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" 
+                                        onclick="approveChiefMarks('${r._id}', false)">❌ Reject</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                // Show items without Chief marks
+                if (withoutChiefMarks.length > 0) {
+                    html += withoutChiefMarks.map(r => {
+                        const statusClass = 'status-pending';
+                        const statusText = r.assignedChief ? 'Awaiting Chief Review' : 'Awaiting Assignment';
+
+                        return `
+                            <tr style="opacity: 0.7; background: rgba(107, 114, 128, 0.1);">
+                                <td style="font-family: monospace; color: var(--primary);">${r.studentId}</td>
+                                <td><strong>${r.subjectCode || '-'}</strong></td>
+                                <td style="color: var(--accent); font-weight: bold;">${r.aiMarks || 'N/A'}</td>
+                                <td style="color: #999;">Not submitted</td>
+                                <td style="font-size: 0.9rem; color: var(--text-muted);">-</td>
+                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" 
+                                        onclick="assignChief('${r._id}')">📋 Assign Chief</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                tbody.innerHTML = html || '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No items to display</td></tr>';
+
+            } catch (error) {
+                console.error('Error loading approvals:', error);
+                showAlert('Error: ' + error.message, 'error');
+                tbody.innerHTML = '<tr><td colspan="7" style="color: red; text-align: center;">Error loading approvals. Check console.</td></tr>';
+            }
+        }
+
+        async function assignChief(resultId) {
+            // Fetch list of available chiefs
+            try {
+                const response = await fetch(`${API_URL}/admin/chief-list`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!result.success || !Array.isArray(result.data)) {
+                    showAlert('Error: Unable to load chiefs list', 'error');
+                    return;
+                }
+
+                const chiefs = result.data;
+
+                if (chiefs.length === 0) {
+                    showAlert('No chiefs available. Please register chiefs first.', 'error');
+                    return;
+                }
+
+                // Create modal for chief selection
+                let chiefHTML = '<div style="max-height: 300px; overflow-y: auto;">';
+                chiefs.forEach(chief => {
+                    chiefHTML += `
+                        <div style="padding: 1rem; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;" 
+                            onclick="confirmAssignChief('${resultId}', '${chief.userId}')">
+                            <strong>${chief.name}</strong><br/>
+                            <small style="color: var(--text-muted);">${chief.department || 'N/A'}</small>
+                        </div>
+                    `;
+                });
+                chiefHTML += '</div>';
+
+                const modal = document.getElementById('chiefSelectModal');
+                if (modal) {
+                    document.getElementById('chiefListContainer').innerHTML = chiefHTML;
+                    document.getElementById('chiefSelectorModal').style.display = 'flex';
+                } else {
+                    // Fallback: use prompt
+                    const chiefId = prompt('Enter Chief ID to assign:');
+                    if (chiefId) {
+                        confirmAssignChief(resultId, chiefId);
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error fetching chiefs:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function confirmAssignChief(resultId, chiefId) {
+            try {
+                const response = await fetch(`${API_URL}/admin/assign-chief`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        resultId,
+                        chiefId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('✅ Chief assigned successfully!', 'success');
+                    const modal = document.getElementById('chiefSelectorModal');
+                    if (modal) modal.style.display = 'none';
+                    loadApprovalsData(); // Reload
+                } else {
+                    showAlert('Error: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error assigning chief:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function approveChiefMarks(resultId, approve) {
+            const adminId = localStorage.getItem('userId');
+            
+            if (!confirm(approve ? 'Are you sure you want to approve these marks?' : 'Are you sure you want to reject these marks?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/admin/approve-chief-marks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        resultId,
+                        adminId,
+                        approve
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(`Marks ${approve ? 'approved' : 'rejected'} successfully!`, 'success');
+                    loadApprovalsData(); // Reload the table
+                } else {
+                    showAlert('Error: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error approving marks:', error);
+                showAlert('Error processing approval: ' + error.message, 'error');
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             addQuestion();
+            // Load approvals on page load
+            setTimeout(() => {
+                loadApprovalsData();
+            }, 500);
         });
     </script>
 </body>

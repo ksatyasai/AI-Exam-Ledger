@@ -98,6 +98,7 @@
 
       <a href="student_dashboard.html" id="navStudentDash" style="display: none;">Dashboard</a>
       <a href="faculty_dashboard.html" id="navFacultyDash" style="display: none;">Dashboard</a>
+      <a href="profile.html" id="navProfile" style="display: none;">Profile</a>
     </nav>
     <div class="auth-buttons">
       <button class="btn btn-secondary" id="authBtn" onclick="handleAuthClick()">Login</button>
@@ -157,6 +158,7 @@
         navFaculty = document.getElementById('navFaculty'),
         navStudentDash = document.getElementById('navStudentDash'),
         navFacultyDash = document.getElementById('navFacultyDash'),
+        navProfile = document.getElementById('navProfile'),
         authBtn = document.getElementById('authBtn'),
         ctaPrimary = document.getElementById('ctaPrimary'),
         ctaSecondary = document.getElementById('ctaSecondary');
@@ -168,6 +170,7 @@
 
         navStudent.style.display = 'none'; // Already logged in
         navStudentDash.style.display = 'inline-block';
+        navProfile.style.display = 'inline-block';
 
         authBtn.innerText = 'Logout';
 
@@ -184,6 +187,7 @@
 
         navFaculty.style.display = 'none'; // Already logged in
         navFacultyDash.style.display = 'inline-block';
+        navProfile.style.display = 'inline-block';
 
         authBtn.innerText = 'Logout';
 

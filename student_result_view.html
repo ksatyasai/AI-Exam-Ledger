@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result Details - ExamChain</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .navbar h1 {
+            font-size: 1.8rem;
+        }
+
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .navbar .logout-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .navbar .logout-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .card-header h2 {
+            color: #667eea;
+        }
+
+        .result-status {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-item {
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-size: 1.3rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .marks-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .marks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .marks-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .marks-box h4 {
+            color: #667eea;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .marks-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #333;
+            margin: 1rem 0;
+        }
+
+        .marks-display.original {
+            color: #667eea;
+        }
+
+        .marks-display.ai {
+            color: #17a2b8;
+        }
+
+        .marks-display.chief {
+            color: #764ba2;
+        }
+
+        .marks-display.final {
+            color: #28a745;
+        }
+
+        .marks-out-of {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .timeline {
+            margin: 2rem 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 2rem;
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            position: absolute;
+            left: 0;
+            top: 5px;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .timeline-item.completed::before {
+            background: #28a745;
+            box-shadow: 0 0 0 2px #28a745;
+        }
+
+        .timeline-item.pending::before {
+            background: #ffc107;
+            box-shadow: 0 0 0 2px #ffc107;
+        }
+
+        .timeline-item.rejected::before {
+            background: #dc3545;
+            box-shadow: 0 0 0 2px #dc3545;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-content h4 {
+            color: #333;
+            margin-bottom: 0.3rem;
+            font-weight: bold;
+        }
+
+        .timeline-content p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0.3rem 0;
+        }
+
+        .timeline-date {
+            color: #999;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .breakdown-section {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .breakdown-section h4 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .breakdown-table th {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .breakdown-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .breakdown-table tr:hover {
+            background: #f0f0f0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.7rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-color: #17a2b8;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-color: #28a745;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffc107;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #dc3545;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: white;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .grade-badge {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .marks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .marks-display {
+                font-size: 2rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>📋 Result Details</h1>
+        <div class="user-info">
+            <span id="studentName">Loading...</span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div id="loadingDiv" class="loading" style="color: white;">
+            <div class="spinner"></div>
+            <p>Loading result details...</p>
+        </div>
+
+        <div id="resultContent" style="display: none;">
+            <!-- Header -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2>Exam Result</h2>
+                        <p id="subjectInfo" style="color: #666; margin-top: 0.3rem;">Loading...</p>
+                    </div>
+                    <div class="result-status" id="resultStatus">Processing...</div>
+                </div>
+
+                <!-- Student Info -->
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Roll Number</div>
+                        <div class="info-value" id="rollNumber">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Subject Code</div>
+                        <div class="info-value" id="subjectCode">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Exam Date</div>
+                        <div class="info-value" id="examDate">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Final Grade</div>
+                        <div class="info-value" id="gradeDisplay">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marks Display -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Marks Comparison</h2>
+                </div>
+
+                <div class="marks-section">
+                    <div class="marks-grid">
+                        <div class="marks-box">
+                            <h4>Original Marks</h4>
+                            <div class="marks-display original" id="originalMarks">--</div>
+                            <div class="marks-out-of">out of 100</div>
+                        </div>
+                        <div class="marks-box" id="aiMarksBox" style="display: none;">
+                            <h4>AI Evaluated</h4>
+                            <div class="marks-display ai" id="aiMarks">--</div>
+                            <div class="marks-out-of">out of 100</div>
+                        </div>
+                        <div class="marks-box" id="chiefMarksBox" style="display: none;">
+                            <h4>Chief Examiner</h4>
+                            <div class="marks-display chief" id="chiefMarks">--</div>
+                            <div class="marks-out-of">out of 100</div>
+                        </div>
+                        <div class="marks-box" id="finalMarksBox">
+                            <h4>Final Approved ✅</h4>
+                            <div class="marks-display final" id="finalMarks">--</div>
+                            <div class="marks-out-of">out of 100</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question-wise Breakdown -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📝 Question-wise Breakdown</h2>
+                </div>
+
+                <div id="breakdownContent">
+                    <p style="color: #666; text-align: center;">Loading breakdown...</p>
+                </div>
+            </div>
+
+            <!-- Revaluation Timeline -->
+            <div class="card" id="revaluationCard" style="display: none;">
+                <div class="card-header">
+                    <h2>📅 Revaluation Timeline</h2>
+                </div>
+
+                <div class="timeline" id="timeline">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Status Alert -->
+            <div class="card">
+                <div id="statusAlert"></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goBack()">← Go Back</button>
+                    <button class="btn btn-primary" onclick="printResult()">🖨️ Print Result</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let studentId = localStorage.getItem('userId');
+        let resultId = new URLSearchParams(window.location.search).get('resultId');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!studentId || !resultId) {
+                window.location.href = 'student_dashboard.html';
+                return;
+            }
+            loadResultDetails();
+        });
+
+        async function loadResultDetails() {
+            try {
+                const response = await fetch(`${API_BASE}/student/result/${studentId}/${resultId}`);
+                const data = await response.json();
+
+                if (!data.success || !data.data) {
+                    showError('Result not found');
+                    return;
+                }
+
+                const result = data.data;
+                displayResult(result);
+            } catch (err) {
+                console.error('Error loading result:', err);
+                showError('Error loading result details: ' + err.message);
+            }
+        }
+
+        function displayResult(result) {
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.getElementById('resultContent').style.display = 'block';
+
+            // Update student info
+            document.getElementById('studentName').textContent = result.studentId;
+            document.getElementById('rollNumber').textContent = result.rollNumber || 'N/A';
+            document.getElementById('subjectCode').textContent = result.subjectCode || 'N/A';
+            document.getElementById('subjectInfo').textContent = result.subjectCode || 'Subject Information';
+            document.getElementById('examDate').textContent = result.createdAt ? new Date(result.createdAt).toLocaleDateString() : 'N/A';
+
+            // Display Marks
+            document.getElementById('originalMarks').textContent = result.marks || '--';
+
+            if (result.aiMarks) {
+                document.getElementById('aiMarksBox').style.display = 'block';
+                document.getElementById('aiMarks').textContent = result.aiMarks;
+            }
+
+            if (result.chiefMarks) {
+                document.getElementById('chiefMarksBox').style.display = 'block';
+                document.getElementById('chiefMarks').textContent = result.chiefMarks;
+            }
+
+            if (result.finalMarks) {
+                document.getElementById('finalMarks').textContent = result.finalMarks;
+                document.getElementById('gradeDisplay').textContent = result.grade || 'N/A';
+            } else {
+                document.getElementById('finalMarksBox').style.display = 'none';
+                document.getElementById('finalMarks').textContent = result.marks;
+                document.getElementById('gradeDisplay').textContent = result.grade || 'N/A';
+            }
+
+            // Status Badge
+            let statusClass = 'status-pending';
+            let statusText = 'Processing';
+            if (result.revaluationStatus === 'approved') {
+                statusClass = 'status-approved';
+                statusText = '✅ Approved';
+            } else if (result.status === 'PASS') {
+                statusClass = 'status-pass';
+                statusText = '✅ PASS';
+            } else if (result.status === 'FAIL') {
+                statusClass = 'status-fail';
+                statusText = '❌ FAIL';
+            }
+
+            document.getElementById('resultStatus').className = 'result-status ' + statusClass;
+            document.getElementById('resultStatus').textContent = statusText;
+
+            // Display Breakdown
+            displayBreakdown(result);
+
+            // Show Timeline if revaluation
+            if (result.revaluationStatus && result.revaluationStatus !== 'none') {
+                displayTimeline(result);
+            }
+
+            // Status Alert
+            displayStatusAlert(result);
+        }
+
+        function displayBreakdown(result) {
+            let breakdown = result.finalMarks && result.chiefBreakdown ? result.chiefBreakdown : 
+                            result.aiBreakdown || [];
+
+            if (!breakdown || breakdown.length === 0) {
+                document.getElementById('breakdownContent').innerHTML = '<p style="color: #666; text-align: center;">No breakdown available</p>';
+                return;
+            }
+
+            let html = '<table class="breakdown-table"><thead><tr><th>Question</th><th>Your Marks</th><th>Total Marks</th><th>Percentage</th></tr></thead><tbody>';
+            
+            for (let q of breakdown) {
+                const percentage = q.totalMarks > 0 ? ((q.marks / q.totalMarks) * 100).toFixed(1) : 0;
+                html += `<tr>
+                    <td>${q.question || 'Q' + (q.qNo || '?')}</td>
+                    <td><strong>${q.marks}</strong></td>
+                    <td>${q.totalMarks}</td>
+                    <td>${percentage}%</td>
+                </tr>`;
+            }
+            
+            html += '</tbody></table>';
+            document.getElementById('breakdownContent').innerHTML = html;
+        }
+
+        function displayTimeline(result) {
+            document.getElementById('revaluationCard').style.display = 'block';
+
+            let timeline = `
+                <div class="timeline-item completed">
+                    <div class="timeline-content">
+                        <h4>✅ Answer Script Received</h4>
+                        <p>Your answer script has been registered in the system.</p>
+                        <div class="timeline-date">${new Date(result.createdAt).toLocaleString()}</div>
+                    </div>
+                </div>
+            `;
+
+            if (result.revaluationPayment) {
+                timeline += `
+                    <div class="timeline-item completed">
+                        <div class="timeline-content">
+                            <h4>💳 Revaluation Fee Paid</h4>
+                            <p>Your revaluation fee has been received and processed.</p>
+                            <div class="timeline-date">${result.revaluationPaymentDate ? new Date(result.revaluationPaymentDate).toLocaleString() : 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.aiMarks) {
+                timeline += `
+                    <div class="timeline-item completed">
+                        <div class="timeline-content">
+                            <h4>🤖 AI Evaluation Complete</h4>
+                            <p>AI evaluation marks: <strong>${result.aiMarks}/100</strong></p>
+                            <div class="timeline-date">${result.aiEvaluatedAt ? new Date(result.aiEvaluatedAt).toLocaleString() : 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.assignedChief) {
+                const chiefStatus = result.chiefMarks ? 'completed' : 'pending';
+                const chiefIcon = result.chiefMarks ? '✅' : '⏳';
+                timeline += `
+                    <div class="timeline-item ${chiefStatus}">
+                        <div class="timeline-content">
+                            <h4>${chiefIcon} Chief Examiner Review</h4>
+                            <p>Chief examiner assigned: <strong>${result.assignedChief}</strong></p>
+                            ${result.chiefMarks ? `<p>Chief marks: <strong>${result.chiefMarks}/100</strong></p>` : '<p>Awaiting chief examiner review...</p>'}
+                            <div class="timeline-date">${result.chiefSubmittedAt ? new Date(result.chiefSubmittedAt).toLocaleString() : 'Processing...'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.approvedAt && result.revaluationStatus === 'approved') {
+                timeline += `
+                    <div class="timeline-item completed">
+                        <div class="timeline-content">
+                            <h4>✅ Admin Approval</h4>
+                            <p>Final marks approved: <strong>${result.finalMarks}/100</strong></p>
+                            <p>Grade: <strong>${result.grade}</strong></p>
+                            <div class="timeline-date">${new Date(result.approvedAt).toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('timeline').innerHTML = timeline;
+        }
+
+        function displayStatusAlert(result) {
+            let alert = '';
+
+            if (result.revaluationStatus === 'approved') {
+                alert = `
+                    <div class="alert alert-success">
+                        <strong>✅ Revaluation Approved</strong><br>
+                        Your revaluation has been successfully completed and approved. Final marks: <strong>${result.finalMarks}/100</strong><br>
+                        Grade: <strong>${result.grade}</strong>
+                    </div>
+                `;
+            } else if (result.revaluationStatus === 'pending_approval') {
+                alert = `
+                    <div class="alert alert-warning">
+                        <strong>⏳ Awaiting Admin Approval</strong><br>
+                        The Chief Examiner has submitted their evaluation. Admin is now reviewing and will finalize your marks soon.
+                    </div>
+                `;
+            } else if (result.revaluationStatus === 'pending_chief') {
+                alert = `
+                    <div class="alert alert-info">
+                        <strong>⏳ Chief Examiner Review</strong><br>
+                        A Chief Examiner has been assigned to review your answer script. The evaluation will be completed soon.
+                    </div>
+                `;
+            } else if (result.revaluationStatus === 'processing') {
+                alert = `
+                    <div class="alert alert-info">
+                        <strong>⏳ Processing Revaluation</strong><br>
+                        Your revaluation is being processed. AI evaluation is in progress.
+                    </div>
+                `;
+            }
+
+            document.getElementById('statusAlert').innerHTML = alert;
+        }
+
+        function showError(message) {
+            document.getElementById('loadingDiv').style.display = 'none';
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'card';
+            errorDiv.innerHTML = `<div class="alert alert-error">${message}</div>`;
+            document.getElementById('resultContent').appendChild(errorDiv);
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function printResult() {
+            window.print();
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
