@@ -21,12 +21,20 @@ mongoose.connect(MONGO_URI)
 // Routes
 const authRoutes = require('./routes/authIds');
 const studentRoutes = require('./routes/student');
+const studentRoutesBlockchain = require('./routes/studentRoutes');
 const facultyRoutes = require('./routes/faculty');
+const adminRoutesBlockchain = require('./routes/adminRoutes');
+const questionPaperRoutes = require('./routes/questionPaperRoutes');
+const evaluationRoutes = require('./routes/evaluationRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/student', studentRoutesBlockchain); // Blockchain routes for students
 app.use('/api/faculty', facultyRoutes);
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/admin', adminRoutesBlockchain); // Blockchain routes for admins
+app.use('/api/admin', questionPaperRoutes); // Question paper management routes (CREATE, READ, UPDATE rubrics)
+app.use('/api/evaluate', evaluationRoutes); // AI evaluation routes (EVALUATE answers against rubrics)
 
 // Base Route
 app.get('/', (req, res) => {

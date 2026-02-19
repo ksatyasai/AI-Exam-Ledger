@@ -14,6 +14,7 @@ const resultSchema = new mongoose.Schema({
         default: 'none'
     },
     aiMarks: { type: Number, default: null },
+    aiBreakdown: { type: Array, default: [] },
     revaluationPayment: { type: Boolean, default: false },
     answerScript: { type: String, default: null }
 });

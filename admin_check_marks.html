@@ -4,20 +4,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Check Marks - ExamChain Admin</title>
+    <title>Manage Question Papers & Check Marks - ExamChain Admin</title>
     <link rel="stylesheet" href="./css/global.css">
     <style>
-        .admin-controls {
+        /* Tab Navigation */
+        .tabs-container {
             display: flex;
+            gap: 0;
             margin-bottom: 2rem;
-            gap: 1rem;
-            align-items: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
             background: var(--surface);
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+        }
+
+        .tab-button {
+            flex: 1;
             padding: 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            text-align: center;
+        }
+
+        .tab-button:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Form Styles */
+        .form-section {
+            background: var(--surface);
+            padding: 2rem;
             border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Question List */
+        .question-list {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .question-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .question-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--primary);
+        }
+
+        .btn-remove {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-remove:hover {
+            background: #dc2626;
+        }
+
+        .btn-add {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add:hover {
+            background: #10b981;
+            transform: translateY(-2px);
+        }
+
+        .keywords-input {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .keyword-tag {
+            background: var(--primary);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .keyword-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0;
+        }
+
+        .keyword-input-field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* Data Table */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -45,14 +219,181 @@
             background: rgba(255, 255, 255, 0.02);
         }
 
-        .grade-pass {
-            color: var(--success);
-            font-weight: bold;
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
 
-        .grade-fail {
-            color: #ef4444;
-            font-weight: bold;
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .status-approved {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+        }
+
+        .status-fail {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.active {
+            display: block;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid #fca5a5;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid #93c5fd;
+        }
+
+        /* Admin Controls */
+        .admin-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Evaluation Breakdown */
+        .evaluation-breakdown {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .question-marks {
+            margin-bottom: 1.5rem;
+        }
+
+        .question-marks:last-child {
+            margin-bottom: 0;
+        }
+
+        .marks-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .marks-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .marks-fill {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs-container {
+                flex-direction: column;
+            }
+
+            .admin-controls {
+                flex-direction: column;
+            }
+
+            .admin-controls input {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -74,42 +415,154 @@
 
     <main class="container">
         <div class="page-header">
-            <h1 class="page-title">Student Marks Repository</h1>
-            <p class="page-subtitle">View and search across all student results.</p>
+            <h1 class="page-title">Question Papers & Student Marks</h1>
+            <p class="page-subtitle">Create rubrics for subjects and view AI-evaluated student marks</p>
         </div>
 
-        <div class="admin-controls">
-            <input type="text" id="filterId" placeholder="Filter by Student ID" class="form-input"
-                style="max-width: 250px;" onkeyup="loadMarks()">
-            <input type="text" id="filterSubject" placeholder="Filter by Subject Code" class="form-input"
-                style="max-width: 250px;" onkeyup="loadMarks()">
-            <div style="flex-grow: 1;"></div>
-            <button class="btn btn-primary" onclick="loadMarks()">Refresh</button>
+        <!-- Alert Messages -->
+        <div id="alertBox" class="alert"></div>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <button class="tab-button active" data-tab="create-rubric" onclick="switchTab('create-rubric')">📋 Create Question Paper</button>
+            <button class="tab-button" data-tab="view-rubrics" onclick="switchTab('view-rubrics')">📚 View Question Papers</button>
+            <button class="tab-button" data-tab="check-marks" onclick="switchTab('check-marks')">✅ Check Student Marks</button>
         </div>
 
-        <div class="card" style="padding: 0;">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Student ID</th>
-                        <th>Subject</th>
-                        <th>Subject Code</th>
-                        <th>Marks</th>
-                        <th>Grade</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr>
-                        <td colspan="6">Loading marks...</td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- ===== TAB 1: CREATE QUESTION PAPER ===== -->
+        <div id="create-rubric" class="tab-content active">
+            <form class="form-section" onsubmit="submitQuestionPaper(event)">
+                <h2 style="margin-top: 0;">Create New Question Paper</h2>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Subject Code *</label>
+                        <input type="text" id="subjectCode" class="form-input" placeholder="e.g., BCS101" required>
+                        <small style="color: var(--text-muted); display: block; margin-top: 0.3rem;">
+                            Unique identifier for the subject (alphanumeric)
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Subject Name *</label>
+                        <input type="text" id="subjectName" class="form-input" placeholder="e.g., Blockchain Systems" required>
+                        <small style="color: var(--text-muted); display: block; margin-top: 0.3rem;">
+                            Full name of the subject
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Questions -->
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h3 style="margin-bottom: 1.5rem;">Add Questions</h3>
+                    <div class="question-list" id="questionsList">
+                        <!-- Questions will be added here -->
+                    </div>
+
+                    <button type="button" class="btn btn-add" onclick="addQuestion()"
+                        style="margin-top: 1.5rem; width: 100%;">
+                        + Add Question
+                    </button>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <button id="submitBtn" type="submit" class="btn btn-primary" style="flex: 1;">Submit Question Paper</button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="resetForm()">Clear Form</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ===== TAB 2: VIEW QUESTION PAPERS ===== -->
+        <div id="view-rubrics" class="tab-content">
+            <div class="admin-controls">
+                <input type="text" id="searchSubject" placeholder="Search by subject code..." class="form-input"
+                    style="flex: 1; min-width: 250px;" onkeyup="searchQuestionPapers()">
+                <button class="btn btn-primary" onclick="loadQuestionPapers()">Refresh</button>
+            </div>
+
+            <div class="card" style="padding: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Questions</th>
+                            <th>Total Marks</th>
+                            <th>Created By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rubricTableBody">
+                        <tr>
+                            <td colspan="6">Loading question papers...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== TAB 3: CHECK STUDENT MARKS ===== -->
+        <div id="check-marks" class="tab-content">
+            <div class="admin-controls">
+                <input type="text" id="filterId" placeholder="Filter by Student ID" class="form-input"
+                    style="flex: 1; min-width: 200px;" onkeyup="loadMarks()">
+                <input type="text" id="filterSubject" placeholder="Filter by Subject Code" class="form-input"
+                    style="flex: 1; min-width: 200px;" onkeyup="loadMarks()">
+                <button class="btn btn-primary" onclick="loadMarks()">Refresh</button>
+            </div>
+
+            <div class="card" style="padding: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>AI Marks</th>
+                            <th>Max Marks</th>
+                            <th>Percentage</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marksTableBody">
+                        <tr>
+                            <td colspan="8">Loading student marks...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
 
+    <!-- Modal for Viewing Question Paper Details -->
+    <div id="questionModal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Question Paper Details</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalBody">
+                <!-- Question details will be filled here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Viewing Student Evaluation -->
+    <div id="evaluationModal" class="modal" onclick="closeEvaluationModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">Student Evaluation Breakdown</h2>
+                <button class="modal-close" onclick="closeEvaluationModal()">×</button>
+            </div>
+            <div id="evaluationBody">
+                <!-- Evaluation details will be filled here -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Check Admin
+        // Admin Check
         (function () {
             const role = localStorage.getItem('userRole');
             if (role !== 'admin') {
@@ -117,47 +570,558 @@
             }
         })();
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadMarks();
-        });
+        const API_URL = 'http://localhost:5000/api';
+        let questionsCount = 0;
+        let allQuestionPapers = [];
 
-        async function loadMarks() {
-            const tbody = document.getElementById('tableBody');
-            const sid = document.getElementById('filterId').value;
-            const sub = document.getElementById('filterSubject').value;
+        // ===== TAB SWITCHING =====
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
 
-            // Debounce could be added here for optimization
+            // Show selected tab
+            const tabEl = document.getElementById(tabName);
+            if (tabEl) tabEl.classList.add('active');
 
-            try {
-                const res = await fetch(`http://localhost:5000/api/admin/results?studentId=${sid}&subject=${sub}`);
-                const data = await res.json();
+            // Activate corresponding button using data-tab attribute
+            const btn = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
+            if (btn) btn.classList.add('active');
 
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6">No results found matching criteria.</td></tr>';
+            // Load data when switching to view/check tabs
+            if (tabName === 'view-rubrics') {
+                loadQuestionPapers();
+            } else if (tabName === 'check-marks') {
+                loadMarks();
+            }
+        }
+
+        // ===== QUESTION MANAGEMENT =====
+        function addQuestion() {
+            questionsCount++;
+            const questionList = document.getElementById('questionsList');
+
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-item';
+            questionDiv.id = `question-${questionsCount}`;
+            questionDiv.innerHTML = `
+                <div class="question-header">
+                    <div class="question-title">Question ${questionsCount}</div>
+                    <button type="button" class="btn-remove" onclick="removeQuestion(${questionsCount})">Remove</button>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Question ID (Q1, Q2, etc.) *</label>
+                        <input type="text" class="form-input question-id" value="Q${questionsCount}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Marks *</label>
+                        <input type="number" class="form-input max-marks" value="10" min="1" max="100" required>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Definition Marks (0-10) *</label>
+                        <input type="number" class="form-input definition-marks" value="3" min="0" max="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Keyword Marks (0-10) *</label>
+                        <input type="number" class="form-input keyword-marks" value="4" min="0" max="10" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Explanation Marks (0-10) *</label>
+                    <input type="number" class="form-input explanation-marks" value="3" min="0" max="10" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Keywords (comma-separated) *</label>
+                    <div class="keywords-input">
+                        <input type="text" class="form-input keyword-input-field" placeholder="Type keyword and press Enter..."
+                            onkeypress="addKeywordTag(event, ${questionsCount})">
+                        <div id="keywords-${questionsCount}" style="display: flex; flex-wrap: wrap; gap: 0.5rem; width: 100%; margin-top: 0.5rem;">
+                        </div>
+                    </div>
+                    <input type="hidden" class="question-keywords" value="">
+                </div>
+            `;
+
+            questionList.appendChild(questionDiv);
+        }
+
+        function removeQuestion(qNum) {
+            const element = document.getElementById(`question-${qNum}`);
+            if (element) {
+                element.remove();
+            }
+        }
+
+        function addKeywordTag(event, qNum) {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+
+            const input = event.target;
+            const keyword = input.value.trim().toLowerCase();
+
+            if (!keyword) return;
+
+            const keywordsContainer = document.getElementById(`keywords-${qNum}`);
+            const keywordsList = document.querySelector(`#question-${qNum} .question-keywords`);
+            const currentKeywords = keywordsList.value ? keywordsList.value.split(',').map(k => k.trim()) : [];
+
+            if (!currentKeywords.includes(keyword)) {
+                currentKeywords.push(keyword);
+
+                // Add tag UI
+                const tag = document.createElement('div');
+                tag.className = 'keyword-tag';
+                tag.innerHTML = `
+                    ${keyword}
+                    <button type="button" onclick="this.parentElement.remove(); updateKeywordsList(${qNum})">×</button>
+                `;
+                keywordsContainer.appendChild(tag);
+
+                // Update hidden input
+                updateKeywordsList(qNum);
+                input.value = '';
+            }
+        }
+
+        function updateKeywordsList(qNum) {
+            const keywordsContainer = document.getElementById(`keywords-${qNum}`);
+            const tags = keywordsContainer.querySelectorAll('.keyword-tag');
+            const keywords = Array.from(tags).map(tag => tag.textContent.trim().slice(0, -1));
+            document.querySelector(`#question-${qNum} .question-keywords`).value = keywords.join(',');
+        }
+
+        // ===== FORM SUBMISSION =====
+        async function submitQuestionPaper(e) {
+            e.preventDefault();
+            console.log('submitQuestionPaper called');
+
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) submitBtn.disabled = true;
+
+            const subjectCode = document.getElementById('subjectCode').value.trim().toUpperCase();
+            const subjectName = document.getElementById('subjectName').value.trim();
+
+            if (!subjectCode || !subjectName) {
+                showAlert('Please fill subject code and name', 'error');
+                if (submitBtn) submitBtn.disabled = false;
+                return;
+            }
+
+            // Collect questions
+            const questions = [];
+            const items = document.querySelectorAll('.question-item');
+            for (const item of items) {
+                let questionId = item.querySelector('.question-id').value.trim();
+                const maxMarks = parseInt(item.querySelector('.max-marks').value) || 0;
+                const definitionMarks = parseInt(item.querySelector('.definition-marks').value) || 0;
+                const keywordMarks = parseInt(item.querySelector('.keyword-marks').value) || 0;
+                const explanationMarks = parseInt(item.querySelector('.explanation-marks').value) || 0;
+                const keywordsStr = item.querySelector('.question-keywords').value.trim();
+                let keywords = keywordsStr ? keywordsStr.split(',').map(k => k.trim().toLowerCase()).filter(Boolean) : [];
+
+                // If no tags were created (admin typed comma-separated keywords but didn't press Enter),
+                // also check the visible input field and parse comma-separated values.
+                if (keywords.length === 0) {
+                    const visibleField = item.querySelector('.keyword-input-field');
+                    if (visibleField && visibleField.value.trim()) {
+                        keywords = visibleField.value
+                            .split(',')
+                            .map(k => k.trim().toLowerCase())
+                            .filter(Boolean);
+                        // update hidden input so UI stays in sync
+                        const hidden = item.querySelector('.question-keywords');
+                        if (hidden) hidden.value = keywords.join(',');
+                    }
+                }
+
+                // Normalize questionId
+                questionId = questionId.toUpperCase();
+                if (!/^Q\d+$/.test(questionId)) {
+                    // If user entered numeric id like '1', convert to Q1
+                    const numeric = questionId.match(/^(\d+)$/);
+                    if (numeric) {
+                        questionId = 'Q' + numeric[1];
+                    }
+                }
+
+                // Validation
+                if (!questionId || keywords.length === 0) {
+                    showAlert(`Question ${questionId || '--'}: Missing question ID or keywords`, 'error');
+                    if (submitBtn) submitBtn.disabled = false;
                     return;
                 }
 
-                tbody.innerHTML = data.map(r => `
-                    <tr>
-                        <td style="font-family: monospace; color: var(--primary);">${r.studentId}</td>
-                        <td>${r.subjectName}</td>
-                        <td>${r.subjectCode}</td>
-                        <td style="font-weight: bold;">${r.marks}</td>
-                        <td>${r.grade}</td>
-                        <td><span class="${r.status === 'PASS' ? 'grade-pass' : 'grade-fail'}">${r.status}</span></td>
-                    </tr>
-                `).join('');
+                if (definitionMarks + keywordMarks + explanationMarks > maxMarks) {
+                    showAlert(`Question ${questionId}: Total marks exceed max marks`, 'error');
+                    if (submitBtn) submitBtn.disabled = false;
+                    return;
+                }
 
-            } catch (e) {
-                console.error(e);
-                tbody.innerHTML = '<tr><td colspan="6" style="color:red;">Failed to load data.</td></tr>';
+                questions.push({
+                    questionId,
+                    maxMarks,
+                    keywords,
+                    definitionMarks,
+                    keywordMarks,
+                    explanationMarks
+                });
             }
+
+            if (questions.length === 0) {
+                showAlert('Add at least one question', 'error');
+                if (submitBtn) submitBtn.disabled = false;
+                return;
+            }
+
+            // Submit to API
+            try {
+                console.log('Submitting question paper:', { subjectCode, subjectName, questions });
+                const response = await fetch(`${API_URL}/admin/create-question-paper`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        subjectCode,
+                        subjectName,
+                        questions,
+                        createdBy: localStorage.getItem('userId') || 'admin'
+                    })
+                });
+
+                let result = {};
+                try { result = await response.json(); } catch (e) { console.warn('Non-JSON response', e); }
+
+                if (response.ok && result && result.success) {
+                    showAlert(`✓ Question paper for ${subjectCode} created successfully!`, 'success');
+                    resetForm();
+                    setTimeout(() => {
+                        switchTab('view-rubrics');
+                        loadQuestionPapers();
+                    }, 1000);
+                } else {
+                    const msg = (result && result.message) || `Error creating question paper (status ${response.status})`;
+                    console.error('Create paper failed', response.status, result);
+                    showAlert(msg, 'error');
+                }
+            } catch (error) {
+                console.error('Network or server error:', error);
+                showAlert(`Error: ${error.message}`, 'error');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('subjectCode').value = '';
+            document.getElementById('subjectName').value = '';
+            document.getElementById('questionsList').innerHTML = '';
+            questionsCount = 0;
+            addQuestion();
+        }
+
+        // ===== LOAD QUESTION PAPERS =====
+        async function loadQuestionPapers() {
+            try {
+                const response = await fetch(`${API_URL}/admin/all-question-papers`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    showAlert(result.message || 'Error loading question papers', 'error');
+                    return;
+                }
+
+                allQuestionPapers = result.data || [];
+                displayQuestionPapers(allQuestionPapers);
+            } catch (error) {
+                console.error(error);
+                showAlert('Error loading question papers', 'error');
+            }
+        }
+
+        function displayQuestionPapers(papers) {
+            const tbody = document.getElementById('rubricTableBody');
+
+            if (papers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No question papers found. Create one to get started!</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = papers.map(paper => `
+                <tr>
+                    <td><strong style="color: var(--primary);">${paper.subjectCode}</strong></td>
+                    <td>${paper.subjectName}</td>
+                    <td style="text-align: center;">${paper.totalQuestions}</td>
+                    <td style="text-align: center; font-weight: bold; color: var(--accent);">${paper.totalMarks}</td>
+                    <td>${paper.createdBy || 'Admin'}</td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" 
+                            onclick="viewQuestionPaper('${paper.subjectCode}')">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function searchQuestionPapers() {
+            const search = document.getElementById('searchSubject').value.toUpperCase();
+            const filtered = allQuestionPapers.filter(p => p.subjectCode.includes(search));
+            displayQuestionPapers(filtered);
+        }
+
+        async function viewQuestionPaper(subjectCode) {
+            try {
+                const response = await fetch(`${API_URL}/admin/question-paper/${subjectCode}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    showAlert('Error loading question paper details', 'error');
+                    return;
+                }
+
+                const paper = result.data;
+                let questionsHTML = '<div style="margin: 1.5rem 0;">';
+
+                paper.questions.forEach(q => {
+                    questionsHTML += `
+                        <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                <strong style="color: var(--primary);">${q.questionId}</strong>
+                                <span style="color: var(--accent); font-weight: bold;">Max: ${q.maxMarks} marks</span>
+                            </div>
+                            <div style="margin: 0.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
+                                <strong>Keywords:</strong> ${q.keywords.join(', ')}
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; font-size: 0.85rem; margin-top: 0.5rem;">
+                                <div>📝 Definition: <strong>${q.definitionMarks}</strong></div>
+                                <div>🔑 Keywords: <strong>${q.keywordMarks}</strong></div>
+                                <div>💭 Explanation: <strong>${q.explanationMarks}</strong></div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                questionsHTML += '</div>';
+
+                const modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 1rem;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Subject Code</h3>
+                            <p style="font-size: 1.2rem; font-weight: bold; color: var(--primary); margin: 0.5rem 0;">${paper.subjectCode}</p>
+                        </div>
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Subject Name</h3>
+                            <p style="font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0;">${paper.subjectName}</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 6px;">
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-muted); font-size: 0.85rem;">Questions</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">${paper.totalQuestions}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-muted); font-size: 0.85rem;">Total Marks</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">${paper.totalMarks}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-muted); font-size: 0.85rem;">Created</div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted);">${new Date(paper.createdAt).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="margin-bottom: 1rem;">Questions & Keywords</h3>
+                        ${questionsHTML}
+                    </div>
+                `;
+
+                document.getElementById('questionModal').classList.add('active');
+            } catch (error) {
+                console.error(error);
+                showAlert('Error loading question details', 'error');
+            }
+        }
+
+        function closeModal(event) {
+            if (event && event.target.id !== 'questionModal') return;
+            document.getElementById('questionModal').classList.remove('active');
+        }
+
+        // ===== LOAD STUDENT MARKS =====
+        async function loadMarks() {
+            const tbody = document.getElementById('marksTableBody');
+            const studentId = document.getElementById('filterId').value.trim();
+            const subjectCode = document.getElementById('filterSubject').value.trim().toUpperCase();
+
+            try {
+                // Fetch results from admin API
+                const response = await fetch(
+                    `${API_URL}/admin/results?studentId=${studentId}&subject=${subjectCode}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                        }
+                    }
+                );
+
+                const results = await response.json();
+
+                if (!Array.isArray(results) || results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem;">No student marks found. Waiting for students to apply for revaluation.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = results.map(r => {
+                    const percentage = r.aiMarks ? Math.round((r.aiMarks / (r.maxMarks || 100)) * 100) : 0;
+                    let statusClass = 'status-pending';
+                    let statusText = 'Pending';
+
+                    if (r.revaluationStatus === 'completed') {
+                        statusClass = 'status-approved';
+                        statusText = 'Approved';
+                    } else if (r.revaluationStatus === 'rejected') {
+                        statusClass = 'status-fail';
+                        statusText = 'Rejected';
+                    }
+
+                    return `
+                        <tr>
+                            <td style="font-family: monospace; color: var(--primary);">${r.studentId}</td>
+                            <td><strong>${r.subjectCode || '-'}</strong></td>
+                            <td>${r.subjectName || '-'}</td>
+                            <td style="font-weight: bold; color: var(--accent);">${r.aiMarks !== null ? r.aiMarks : '-'}</td>
+                            <td>${r.maxMarks || 100}</td>
+                            <td style="font-weight: bold;">${percentage}%</td>
+                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                            <td>
+                                ${r.aiMarks ? `<button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" 
+                                    onclick="viewEvaluation('${r.studentId}', '${r.subjectCode || ''}', ${r.aiMarks}, decodeURIComponent('${encodeURIComponent(JSON.stringify(r.aiBreakdown || []))}'))">Breakdown</button>` : '-'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="8" style="color: red; text-align: center;">Error loading marks. Check console.</td></tr>';
+            }
+        }
+
+        function viewEvaluation(studentId, subjectCode, totalMarks, breakdownStr) {
+            let breakdown = [];
+            try {
+                // breakdownStr may already be an object/array if called programmatically
+                if (typeof breakdownStr === 'string') {
+                    breakdown = JSON.parse(breakdownStr);
+                } else if (Array.isArray(breakdownStr)) {
+                    breakdown = breakdownStr;
+                } else if (typeof breakdownStr === 'object' && breakdownStr !== null) {
+                    breakdown = breakdownStr;
+                }
+            } catch (e) {
+                try {
+                    // Attempt to decode URI component then parse
+                    breakdown = JSON.parse(decodeURIComponent(breakdownStr));
+                } catch (err) {
+                    console.error('Failed to parse breakdown', e, err);
+                    breakdown = [];
+                }
+            }
+            const modal = document.getElementById('evaluationModal');
+
+            let html = `
+                <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <p style="margin: 0.3rem 0; color: var(--text-muted);"><strong>Student ID:</strong> ${studentId}</p>
+                    <p style="margin: 0.3rem 0; color: var(--text-muted);"><strong>Subject:</strong> ${subjectCode}</p>
+                    <p style="margin: 0.3rem 0; font-size: 1.2rem;"><strong>Total Marks: </strong><span style="color: var(--accent); font-weight: bold; font-size: 1.3rem;">${totalMarks}</span></p>
+                </div>
+
+                <div class="evaluation-breakdown">
+                    <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Question-wise Breakdown</h3>
+            `;
+
+            if (Array.isArray(breakdown) && breakdown.length > 0) {
+                breakdown.forEach(q => {
+                    const maxMarks = q.max_marks || 10;
+                    const suggestedMarks = q.suggested_marks || 0;
+                    const percentage = Math.round((suggestedMarks / maxMarks) * 100);
+
+                    html += `
+                        <div class="question-marks">
+                            <div class="marks-label">
+                                <span style="font-weight: 600;">${q.question || 'Question'}</span>
+                                <span style="color: var(--accent); font-weight: bold;">${suggestedMarks}/${maxMarks}</span>
+                            </div>
+                            <div class="marks-bar">
+                                <div class="marks-fill" style="width: ${percentage}%;"></div>
+                            </div>
+                            ${q.breakdown ? `
+                                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                                    📝 Definition: ${q.breakdown.definition || 0} |
+                                    🔑 Keywords: ${q.breakdown.keywords || 0} |
+                                    💭 Explanation: ${q.breakdown.explanation || 0}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p style="color: var(--text-muted);">No detailed breakdown available.</p>';
+            }
+
+            html += '</div>';
+
+            document.getElementById('evaluationBody').innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        function closeEvaluationModal(event) {
+            if (event && event.target.id !== 'evaluationModal') return;
+            document.getElementById('evaluationModal').classList.remove('active');
+        }
+
+        // ===== UTILITIES =====
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.textContent = message;
+            alertBox.className = `alert active alert-${type}`;
+
+            setTimeout(() => {
+                alertBox.classList.remove('active');
+            }, 4000);
         }
 
         function logout() {
             localStorage.clear();
             window.location.href = 'index.html';
         }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            addQuestion();
+        });
     </script>
 </body>
 

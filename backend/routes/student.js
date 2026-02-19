@@ -5,6 +5,7 @@ const Notification = require('../models/Notification');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const QuestionPaper = require('../models/QuestionPaper');
 
 // GET /api/student/results/:studentId
 router.get('/results/:studentId', async (req, res) => {
@@ -26,69 +27,136 @@ router.get('/notifications', async (req, res) => {
     }
 });
 
-// POST /api/student/reval
-router.post('/reval', async (req, res) => {
-    const { studentId, subjectCode, type } = req.body;
-    console.log(`Reval requested for ${studentId} - ${subjectCode}`);
+// Revaluation handler (supports POST body or GET query)
+async function handleReval(req, res) {
+    const source = req.method === 'GET' ? req.query : req.body;
+    const studentId = source.studentId;
+    const subjectCode = source.subjectCode || source.subject;
+    const type = source.type;
+
+    console.log(`Reval requested for ${studentId} - ${subjectCode} (via ${req.method})`);
 
     try {
         const result = await Result.findOne({ studentId, subjectCode });
         if (!result) return res.status(404).json({ message: 'Result not found' });
 
+        // Ensure we have a file or can handle it
         if (!result.answerScript) {
             return res.status(400).json({ message: 'No answer script found for this subject. Cannot proceed with AI Revaluation.' });
         }
 
-        // Verify file exists
         const absolutePdfPath = path.join(__dirname, '..', result.answerScript);
         if (!fs.existsSync(absolutePdfPath)) {
-            return res.status(404).json({ message: 'Answer script file is missing on server.' });
+            console.warn(`File missing at ${absolutePdfPath}, checking if path is absolute or relative...`);
+            // Fallback check if path is already absolute (sometimes saved differently)
+            if (!fs.existsSync(result.answerScript)) {
+                return res.status(404).json({ message: 'Answer script file is missing on server.' });
+            }
         }
 
         result.revaluationStatus = 'processing';
         result.revaluationPayment = true;
         await result.save();
 
-        // Call Python Script
-        const scriptPath = path.join(__dirname, '..', 'scripts', 'ai_reval.py');
-        const pythonProcess = spawn('python', [scriptPath, absolutePdfPath, result.marks]);
+        // Call New AI Module
+        // We will fetch rubric from DB (Node) and pass it to Python via stdin to avoid Python HTTP dependency
+        const scriptPath = path.join(__dirname, '..', 'ai-module', 'revaluation.py');
+
+        // Try to load rubric for this subject from QuestionPaper collection
+        let rubricForPython = {};
+        try {
+            const paper = await QuestionPaper.findOne({ subjectCode: result.subjectCode });
+            if (paper && paper.questions && paper.questions.length > 0) {
+                // Build expected structure: { "Q1": { max_marks, keywords, definition_marks, keyword_marks, explanation_marks }, ... }
+                paper.questions.forEach(q => {
+                    rubricForPython[q.questionId] = {
+                        max_marks: q.maxMarks,
+                        keywords: q.keywords || [],
+                        definition_marks: q.definitionMarks || 0,
+                        keyword_marks: q.keywordMarks || 0,
+                        explanation_marks: q.explanationMarks || 0
+                    };
+                });
+            }
+        } catch (e) {
+            console.error('Error loading QuestionPaper for reval:', e);
+        }
+
+        // Spawn Python and send rubric JSON to stdin (may be empty object)
+        const pythonProcess = spawn('python', [scriptPath, "", absolutePdfPath]);
+
+        // Write rubric JSON to stdin and close
+        try {
+            pythonProcess.stdin.write(JSON.stringify(rubricForPython));
+            pythonProcess.stdin.end();
+        } catch (e) {
+            console.warn('Failed to write rubric to python stdin:', e);
+        }
 
         let dataString = '';
+        let errorString = '';
 
         pythonProcess.stdout.on('data', (data) => {
             dataString += data.toString();
         });
 
         pythonProcess.stderr.on('data', (data) => {
-            console.error(`Python Error: ${data}`);
+            errorString += data.toString();
+            console.error(`Python Stderr: ${data}`);
         });
 
         pythonProcess.on('close', async (code) => {
             console.log(`Python script exited with code ${code}`);
 
             try {
-                // Parse JSON output from Python
-                const aiResult = JSON.parse(dataString);
+                // The python script might output other things, so we need to find the JSON array part
+                // In case there are print statements before the JSON
+                const jsonStartIndex = dataString.indexOf('[');
+                const jsonEndIndex = dataString.lastIndexOf(']');
 
-                if (aiResult.success) {
-                    // Update Record - Set as Pending Approval
-                    result.aiMarks = aiResult.new_marks;
-                    // We don't update official marks yet
-                    result.revaluationStatus = 'pending_approval';
-
-                    await result.save();
-                    res.json({
-                        success: true,
-                        message: 'AI Revaluation Completed. Sent for Admin Approval.',
-                        data: aiResult
-                    });
-                } else {
-                    res.status(500).json({ message: 'AI Revaluation Failed internally.', error: aiResult });
+                if (jsonStartIndex === -1 || jsonEndIndex === -1) {
+                    throw new Error("No JSON array found in output");
                 }
+
+                const jsonStr = dataString.substring(jsonStartIndex, jsonEndIndex + 1);
+                const aiResults = JSON.parse(jsonStr);
+
+                // aiResults is an array: [{ question, suggested_marks, max_marks, ... }]
+
+                // Calculate total suggested marks
+                let totalAiMarks = 0;
+                aiResults.forEach(item => {
+                    totalAiMarks += (item.suggested_marks || 0);
+                });
+
+                // Update Record
+                result.aiMarks = totalAiMarks;
+                result.aiBreakdown = aiResults;
+                result.revaluationStatus = 'pending_approval';
+
+                await result.save();
+
+                res.json({
+                    success: true,
+                    message: 'AI Revaluation Completed. Sent for Admin Approval.',
+                    data: {
+                        totalMarks: totalAiMarks,
+                        breakdown: aiResults
+                    }
+                });
 
             } catch (parseError) {
                 console.error("Failed to parse Python output:", dataString);
-                res.status(500).json({ message: 'Error parsing AI response', internal: parseError.message });
+                // Revert status if failed
+                result.revaluationStatus = 'pending';
+                await result.save();
+
+                res.status(500).json({
+                    message: 'AI Revaluation Failed internally.',
+                    error: parseError.message,
+                    raw_output: dataString,
+                    stderr: errorString
+                });
             }
         });
 
@@ -96,6 +164,11 @@ router.post('/reval', async (req, res) => {
         console.error(err);
         res.status(500).json({ message: err.message });
     }
-});
+}
+
+// POST /api/student/reval
+router.post('/reval', handleReval);
+// Support GET for legacy links or direct URL access
+router.get('/reval', handleReval);
 
 module.exports = router;
