@@ -157,11 +157,10 @@
             // Simulate Payment Gateway Delay first
             await new Promise(r => setTimeout(r, 1500));
 
-            status.innerText = "Payment Verified. Starting AI Revaluation...";
-
             try {
                 if (subject && studentId) {
-                    const response = await fetch('http://localhost:5000/api/student/reval', {
+                    // Call the new payment-only endpoint - no AI correction here
+                    const response = await fetch('http://localhost:5000/api/student/process-payment', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ studentId, subjectCode: subject, type })
@@ -170,8 +169,8 @@
                     const data = await response.json();
 
                     if (response.ok && data.success) {
-                        // Success
-                        status.innerText = "Request Submitted! Waiting for Admin Approval.";
+                        // Payment successful - show success message only
+                        status.innerText = "✓ Payment Successful! Waiting for Admin Review.";
                         status.style.color = "var(--success)";
                         status.style.fontWeight = "bold";
                         check.style.display = 'block';
@@ -183,7 +182,7 @@
                             window.location.href = 'student_dashboard.html';
                         }, 2500); // Slightly longer delay to read message
                     } else {
-                        throw new Error(data.message || 'Revaluation failed');
+                        throw new Error(data.message || 'Payment processing failed');
                     }
                 } else {
                     throw new Error("Missing transaction details");

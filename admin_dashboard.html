@@ -215,55 +215,77 @@
             else tabs[2].classList.add('active');
 
             if (type === 'reval') {
-                loadRevals();
+                loadPaymentApprovals();
             } else {
                 loadUsers(type);
             }
         }
 
-        async function loadRevals() {
-            setHeaders(['Student ID', 'Subject', 'Current Marks', 'AI Suggested', 'Action']);
+        // Fetch students who paid fees and are waiting for AI correction
+        async function loadPaymentApprovals() {
+            setHeaders(['Student ID', 'Subject', 'Current Marks', 'Payment Status', 'Action']);
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="5">Checking pending requests...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">Checking payment requests...</td></tr>';
             try {
-                const res = await fetch('http://localhost:5000/api/admin/reval-requests', {
+                const res = await fetch('http://localhost:5000/api/admin/payment-pending', {
                     headers: getAuthHeader()
                 });
                 const data = await res.json();
-                if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="5">No pending approvals.</td></tr>'; return; }
-                tbody.innerHTML = data.map(r => `
+                
+                if (!data.success || data.count === 0) { 
+                    tbody.innerHTML = '<tr><td colspan="5">No pending payment approvals.</td></tr>'; 
+                    return; 
+                }
+                
+                tbody.innerHTML = data.data.map(r => `
                     <tr>
-                        <td>${r.studentId}</td>
+                        <td style="font-family: monospace; color: var(--primary);">${r.studentId}</td>
                         <td>${r.subjectCode}</td>
-                        <td>${r.marks}</td>
-                        <td style="color:var(--success); font-weight:bold;">${r.aiMarks}</td>
+                        <td>${r.originalMarks || r.marks}</td>
+                        <td><span style="color: var(--success); font-weight: bold;">✓ Paid</span></td>
                         <td>
-                            <button class="btn btn-primary" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="processReval('${r._id}', 'approve')">Approve</button>
-                            <button class="btn btn-danger" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="processReval('${r._id}', 'reject')">Reject</button>
+                            <button class="btn btn-primary" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="triggerAICorrection('${r._id}', '${r.studentId}', '${r.subjectCode}')">
+                                Start AI Correction
+                            </button>
                         </td>
                     </tr>
                 `).join('');
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="color:red;">Error.</td></tr>'; }
+            } catch (e) { 
+                console.error('Error:', e);
+                tbody.innerHTML = '<tr><td colspan="5" style="color:red;">Error loading requests.</td></tr>'; 
+            }
         }
 
-        async function processReval(id, action) {
-            if (!confirm(`Are you sure you want to ${action} this result?`)) return;
+        // Trigger AI correction when admin clicks the button
+        async function triggerAICorrection(resultId, studentId, subjectCode) {
+            if (!confirm(`Start AI Correction for ${studentId} - ${subjectCode}?`)) return;
 
             try {
-                const res = await fetch('http://localhost:5000/api/admin/approve-reval', {
+                const btn = event.target;
+                btn.disabled = true;
+                btn.innerText = 'Processing...';
+                
+                const res = await fetch('http://localhost:5000/api/admin/trigger-ai-correction', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ resultId: id, action })
+                    body: JSON.stringify({ resultId, studentId, subjectCode })
                 });
+                
                 const data = await res.json();
+                
                 if (data.success) {
-                    alert('Processed successfully');
-                    loadRevals();
+                    alert('✓ AI Correction started! Processing in background...\n\nThe AI analysis will be completed shortly and the result will be moved to the final approval stage.');
+                    loadPaymentApprovals();
                 } else {
-                    alert('Error: ' + data.message);
+                    alert('Error: ' + (data.message || 'Failed to start AI correction'));
+                    btn.disabled = false;
+                    btn.innerText = 'Start AI Correction';
                 }
             } catch (e) {
-                alert('Network Error');
+                console.error('Error:', e);
+                alert('Network Error: ' + e.message);
+                event.target.disabled = false;
+                event.target.innerText = 'Start AI Correction';
             }
         }
 

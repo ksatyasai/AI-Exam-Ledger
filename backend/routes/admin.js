@@ -151,6 +151,184 @@ router.get('/reval-requests', async (req, res) => {
     }
 });
 
+// GET /api/admin/payment-pending - Get students who paid for revaluation but AI not done yet
+// These are the ones waiting in approval queue for admin to trigger AI correction
+router.get('/payment-pending', async (req, res) => {
+    try {
+        // Get requests where payment is made but AI correction not yet done
+        const requests = await Result.find({ 
+            revaluationPayment: true, 
+            revaluationStatus: 'pending'
+        }).select('studentId subjectCode marks originalMarks revaluationPayment revaluationStatus createdAt');
+        
+        res.json({
+            success: true,
+            count: requests.length,
+            data: requests
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// POST /api/admin/trigger-ai-correction - Admin clicks button to trigger AI correction for a specific student
+router.post('/trigger-ai-correction', async (req, res) => {
+    try {
+        const { resultId, studentId, subjectCode } = req.body;
+
+        if (!resultId || !studentId || !subjectCode) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields: resultId, studentId, subjectCode'
+            });
+        }
+
+        const result = await Result.findById(resultId);
+        if (!result) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Result not found' 
+            });
+        }
+
+        // Ensure the result has payment marked and is in pending status
+        if (!result.revaluationPayment || result.revaluationStatus !== 'pending') {
+            return res.status(400).json({
+                success: false,
+                message: 'This result is not in correct state for AI correction'
+            });
+        }
+
+        // Ensure we have an answer script
+        if (!result.answerScript) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'No answer script found for this subject. Cannot proceed with AI Correction.' 
+            });
+        }
+
+        const absolutePdfPath = require('path').join(__dirname, '..', result.answerScript);
+        const fs = require('fs');
+        
+        if (!fs.existsSync(absolutePdfPath)) {
+            console.warn(`File missing at ${absolutePdfPath}`);
+            if (!fs.existsSync(result.answerScript)) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Answer script file is missing on server.' 
+                });
+            }
+        }
+
+        // Set status to processing
+        result.revaluationStatus = 'processing';
+        await result.save();
+
+        // Call the AI Module (Python script)
+        const { spawn } = require('child_process');
+        const path = require('path');
+        const QuestionPaper = require('../models/QuestionPaper');
+
+        const scriptPath = path.join(__dirname, '..', 'ai-module', 'revaluation.py');
+
+        // Try to load rubric for this subject from QuestionPaper collection
+        let rubricForPython = {};
+        try {
+            const paper = await QuestionPaper.findOne({ subjectCode: result.subjectCode });
+            if (paper && paper.questions && paper.questions.length > 0) {
+                paper.questions.forEach(q => {
+                    rubricForPython[q.questionId] = {
+                        max_marks: q.maxMarks,
+                        keywords: q.keywords || [],
+                        definition_marks: q.definitionMarks || 0,
+                        keyword_marks: q.keywordMarks || 0,
+                        explanation_marks: q.explanationMarks || 0
+                    };
+                });
+            }
+        } catch (e) {
+            console.error('Error loading QuestionPaper for reval:', e);
+        }
+
+        // Spawn Python and send rubric JSON to stdin
+        const pythonProcess = spawn('python', [scriptPath, "", absolutePdfPath]);
+
+        try {
+            pythonProcess.stdin.write(JSON.stringify(rubricForPython));
+            pythonProcess.stdin.end();
+        } catch (e) {
+            console.warn('Failed to write rubric to python stdin:', e);
+        }
+
+        let dataString = '';
+        let errorString = '';
+
+        pythonProcess.stdout.on('data', (data) => {
+            dataString += data.toString();
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            errorString += data.toString();
+            console.error(`Python Stderr: ${data}`);
+        });
+
+        pythonProcess.on('close', async (code) => {
+            console.log(`Python script exited with code ${code}`);
+
+            try {
+                const jsonStartIndex = dataString.indexOf('[');
+                const jsonEndIndex = dataString.lastIndexOf(']');
+
+                if (jsonStartIndex === -1 || jsonEndIndex === -1) {
+                    throw new Error("No JSON array found in output");
+                }
+
+                const jsonStr = dataString.substring(jsonStartIndex, jsonEndIndex + 1);
+                const aiResults = JSON.parse(jsonStr);
+
+                // Calculate total suggested marks
+                let totalAiMarks = 0;
+                aiResults.forEach(item => {
+                    totalAiMarks += (item.suggested_marks || 0);
+                });
+
+                // Update Record
+                result.aiMarks = totalAiMarks;
+                result.aiBreakdown = aiResults;
+                result.revaluationStatus = 'pending_approval';
+                await result.save();
+
+                console.log(`✅ AI Correction completed for ${studentId} - ${subjectCode}`);
+
+            } catch (parseError) {
+                console.error("Failed to parse Python output:", dataString);
+                // Revert status if failed
+                result.revaluationStatus = 'pending';
+                await result.save();
+            }
+        });
+
+        // Return immediately - AI processing happens in background
+        res.json({
+            success: true,
+            message: 'AI Correction started. Processing in background...',
+            data: {
+                resultId: result._id,
+                studentId: result.studentId,
+                subjectCode: result.subjectCode,
+                status: 'processing'
+            }
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ 
+            success: false, 
+            message: err.message 
+        });
+    }
+});
+
 // POST /api/admin/approve-chief-marks - Admin approves Chief-submitted marks
 // PROTECTED: Requires JWT token and admin role
 router.post('/approve-chief-marks', verifyToken, checkRole(['admin']), async (req, res) => {

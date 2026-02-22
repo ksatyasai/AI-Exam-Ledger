@@ -191,9 +191,56 @@ async function handleReval(req, res) {
     }
 }
 
-// POST /api/student/reval
+// POST /api/student/reval - AI Revaluation (called by admin panel)
 router.post('/reval', handleReval);
 // Support GET for legacy links or direct URL access
 router.get('/reval', handleReval);
+
+// POST /api/student/process-payment - Mark payment received, don't start AI yet
+// This is called when student pays the fee
+// AI correction will only happen when admin clicks button in approval page
+router.post('/process-payment', async (req, res) => {
+    try {
+        const { studentId, subjectCode } = req.body;
+
+        if (!studentId || !subjectCode) {
+            return res.status(400).json({
+                success: false,
+                message: 'Student ID and Subject Code are required'
+            });
+        }
+
+        const result = await Result.findOne({ studentId, subjectCode });
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                message: 'Result not found'
+            });
+        }
+
+        // Mark that payment has been received
+        result.revaluationPayment = true;
+        result.revaluationStatus = 'pending'; // Waiting for admin to trigger AI correction
+        await result.save();
+
+        res.json({
+            success: true,
+            message: 'Payment received successfully. Please wait for admin approval.',
+            data: {
+                studentId: result.studentId,
+                subjectCode: result.subjectCode,
+                status: 'pending',
+                paymentStatus: 'completed'
+            }
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
 
 module.exports = router;
